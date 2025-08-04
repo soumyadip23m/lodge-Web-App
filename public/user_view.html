@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Rooms - New BayView</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold font-display text-teal-800">New BayView Guest House</h1>
+            <a href="index.html" class="text-sm text-teal-600 hover:underline">&larr; Back to Main Site</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <!-- Current Rooms Display -->
+        <div>
+            <h2 class="text-3xl font-bold font-display text-slate-800 mb-6 text-center">Our Room Directory</h2>
+            <div id="user-rooms-container" class="space-y-4 max-w-4xl mx-auto">
+                <!-- Rooms will be dynamically inserted here -->
+                <p class="text-slate-500 text-center">Loading rooms...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="user_view.js"></script>
+</body>
+</html>

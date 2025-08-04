@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Profile - New BayView</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold font-display text-teal-800">New BayView</a>
+            <div>
+                <a href="index.html" class="text-sm text-slate-600 hover:text-teal-800 transition-colors">Home</a>
+                <button id="logout-button" class="ml-4 text-sm text-red-600 hover:underline">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
+            <h2 class="text-3xl font-bold font-display text-slate-800 mb-6">Your Profile</h2>
+            
+            <!-- Profile Photo Upload -->
+            <div class="mb-6 text-center">
+                <img id="profile-photo-preview" src="https://placehold.co/128x128/e2e8f0/475569?text=User" alt="User Profile Photo" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover">
+                <label for="photo-upload" class="cursor-pointer btn-gradient text-white font-bold px-4 py-2 rounded-lg text-sm">
+                    Upload New Photo
+                </label>
+                <input type="file" id="photo-upload" class="hidden" accept="image/*">
+            </div>
+
+            <form id="profile-form">
+                <div class="mb-4">
+                    <label for="profileName" class="block text-slate-700 font-medium mb-2">Full Name</label>
+                    <input type="text" id="profileName" name="profileName" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="profileEmail" class="block text-slate-700 font-medium mb-2">Email Address</label>
+                    <input type="email" id="profileEmail" name="profileEmail" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg" readonly>
+                </div>
+                 <div class="mb-6">
+                    <label for="profilePassword" class="block text-slate-700 font-medium mb-2">New Password</label>
+                    <input type="password" id="profilePassword" name="profilePassword" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Leave blank to keep current password">
+                </div>
+                <button type="submit" class="w-full md:w-auto btn-gradient text-white font-bold px-8 py-3 rounded-lg">Save Changes</button>
+            </form>
+            <div id="profile-feedback" class="hidden text-center p-4 mt-4 rounded-lg"></div>
+        </div>
+    </main>
+    <script src="profile.js"></script>
+</body>
+</html>
