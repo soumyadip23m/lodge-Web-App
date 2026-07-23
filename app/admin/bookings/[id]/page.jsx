@@ -14,6 +14,44 @@ export default function BookingDetailsPage() {
   const [actualCheckout, setActualCheckout] = useState('');
   const [updating, setUpdating] = useState(false);
 
+  const exportToExcel = () => {
+    if (!booking) return;
+    const roomNum = booking.rooms?.room_number || 'N/A';
+    const checkIn = booking.check_in;
+    const checkOut = booking.check_out;
+    const phone = booking.customer_phone || 'N/A';
+    const email = booking.customer_email || 'N/A';
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Room Number,Check-in Date,Check-out Date,Member Name,Age,Phone Number,Email Address,ID Type,ID Number\r\n";
+
+    const membersList = Array.isArray(booking.members) && booking.members.length > 0
+      ? booking.members
+      : [{ name: booking.customer_name, age: booking.age || 'N/A', id_type: booking.id_type || 'Aadhaar Card', id_number: booking.id_number || 'N/A' }];
+
+    membersList.forEach((m, index) => {
+      const name = `"${m.name || 'Unnamed'}"`;
+      const age = m.age || 'N/A';
+      const mPhone = index === 0 ? `"${phone}"` : '"-"';
+      const mEmail = index === 0 ? `"${email}"` : '"-"';
+      const idType = `"${m.id_type || 'Aadhaar Card'}"`;
+      const idNum = `"${m.id_number || 'N/A'}"`;
+      csvContent += `${roomNum},${checkIn},${checkOut},${name},${age},${mPhone},${mEmail},${idType},${idNum}\r\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Room_${roomNum}_Dossier_${booking.id.slice(0, 8)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    window.print();
+  };
+
   const handleEarlyCheckout = async (e) => {
     e.preventDefault();
     setUpdating(true);
@@ -90,6 +128,7 @@ export default function BookingDetailsPage() {
     ? booking.members
     : [{
         name: booking.customer_name,
+        age: booking.age || 'N/A',
         id_type: booking.id_type || 'Aadhaar Card',
         id_number: booking.id_number || 'N/A',
         id_image_url: booking.id_image_url || ''
@@ -114,13 +153,31 @@ export default function BookingDetailsPage() {
             </p>
           </div>
 
-          <Link
-            href="/admin/bookings"
-            className="bg-surface hover:bg-surface-hover text-content border border-border px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center space-x-2 cursor-pointer shrink-0"
-          >
-            <span>⬅️</span>
-            <span>Back to History</span>
-          </Link>
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap print:hidden">
+            <button
+              onClick={exportToExcel}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer active:scale-95"
+            >
+              <span>📊</span>
+              <span>Export Excel</span>
+            </button>
+            
+            <button
+              onClick={exportToPDF}
+              className="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer active:scale-95"
+            >
+              <span>🖨️</span>
+              <span>Save PDF / Print</span>
+            </button>
+
+            <Link
+              href="/admin/bookings"
+              className="bg-surface hover:bg-surface-hover text-content border border-border px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center space-x-2 cursor-pointer"
+            >
+              <span>⬅️</span>
+              <span>Back to History</span>
+            </Link>
+          </div>
         </div>
 
         {/* Room & Primary Contact Overview Panel */}
@@ -200,6 +257,10 @@ export default function BookingDetailsPage() {
 
                   {/* ID Document Details */}
                   <div className="space-y-2 text-xs sm:text-sm mb-5">
+                    <div className="flex justify-between items-center bg-background/50 px-3 py-2 rounded-lg border border-border/50">
+                      <span className="text-muted font-medium">Age:</span>
+                      <span className="font-bold text-content">{member.age ? `${member.age} Years Old` : 'N/A'}</span>
+                    </div>
                     <div className="flex justify-between items-center bg-background/50 px-3 py-2 rounded-lg border border-border/50">
                       <span className="text-muted font-medium">Document Type:</span>
                       <span className="font-bold text-primary">{member.id_type || 'Aadhaar Card'}</span>

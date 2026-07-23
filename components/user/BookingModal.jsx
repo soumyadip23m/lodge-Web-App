@@ -11,7 +11,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
     check_in: '',
     check_out: '',
     members: [
-      { name: '', id_type: 'Aadhaar Card', id_number: '', id_image_url: '' }
+      { name: '', age: '', id_type: 'Aadhaar Card', id_number: '', id_image_url: '' }
     ],
   });
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
   const addMember = () => {
     setFormData((prev) => ({
       ...prev,
-      members: [...prev.members, { name: '', id_type: 'Aadhaar Card', id_number: '', id_image_url: '' }],
+      members: [...prev.members, { name: '', age: '', id_type: 'Aadhaar Card', id_number: '', id_image_url: '' }],
     }));
   };
 
@@ -200,16 +200,31 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-muted mb-1">Member Full Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    value={member.name}
-                    onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
-                    className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium shadow-sm"
-                    placeholder="Enter full legal name"
-                  />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-[11px] font-bold text-muted mb-1">Member Full Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={member.name}
+                      onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+                      className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium shadow-sm"
+                      placeholder="Enter full legal name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-muted mb-1">Age <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      max="120"
+                      value={member.age}
+                      onChange={(e) => handleMemberChange(index, 'age', e.target.value)}
+                      className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium shadow-sm"
+                      placeholder="e.g., 25"
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
@@ -301,7 +316,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
 
           <button
             type="submit"
-            disabled={loading || uploadingIndex !== null || formData.members.some((m) => !m.id_image_url || !m.name || !m.id_number)}
+            disabled={loading || uploadingIndex !== null || formData.members.some((m) => !m.id_image_url || !m.name || !m.id_number || !m.age)}
             className="w-full mt-4 bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex justify-center items-center space-x-2"
           >
             <span>{loading ? '⏳' : uploadingIndex !== null ? '⬆️' : '⚡'}</span>
