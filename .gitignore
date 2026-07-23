@@ -1,0 +1,15 @@
+@"
+# Node dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+.next
+
+# JSON files (excluding essential package configs)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+"@ | Out-File -Encoding utf8 .gitignore 
