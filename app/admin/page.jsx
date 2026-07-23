@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import RoomEditorModal from '../../components/admin/RoomEditorModal';
 
@@ -54,13 +55,23 @@ export default function AdminDashboard() {
             </p>
           </div>
           
-          <button
-            onClick={() => { setSelectedRoom(null); setIsModalOpen(true); }}
-            className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow cursor-pointer shrink-0"
-          >
-            <span>✨</span>
-            <span>+ Add New Room</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+            <Link
+              href="/admin/bookings"
+              className="w-full sm:w-auto bg-surface hover:bg-surface-hover text-content border border-border hover:border-primary/50 px-5 py-3.5 rounded-xl font-bold shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <span>📋</span>
+              <span>Booking History</span>
+            </Link>
+
+            <button
+              onClick={() => { setSelectedRoom(null); setIsModalOpen(true); }}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow cursor-pointer"
+            >
+              <span>✨</span>
+              <span>+ Add New Room</span>
+            </button>
+          </div>
         </div>
 
         {/* Catalog Content Area */}
