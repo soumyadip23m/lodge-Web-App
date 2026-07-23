@@ -7,11 +7,11 @@ import { supabase } from '../../../lib/supabase';
 export default function BookingHistoryPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState('');
 
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
-      // Fetch bookings along with room details
       const { data, error } = await supabase
         .from('bookings')
         .select('*, rooms(name, room_number, type)')
@@ -22,6 +22,23 @@ export default function BookingHistoryPage() {
     };
     fetchBookings();
   }, []);
+
+  // Filter Bookings (Check-ins / Active Stays)
+  const bookingsList = bookings.filter((b) => {
+    const isNotCheckedOut = b.status !== 'checked_out';
+    if (!selectedDate) return isNotCheckedOut;
+    return isNotCheckedOut && b.check_in === selectedDate;
+  });
+
+  // Filter Checkouts (Departed / Completed Stays)
+  const checkoutsList = bookings.filter((b) => {
+    const isCheckedOut = b.status === 'checked_out';
+    if (!selectedDate) return isCheckedOut;
+    return (
+      (isCheckedOut || b.check_out === selectedDate) &&
+      (b.check_out === selectedDate || b.actual_checkout_time?.startsWith(selectedDate))
+    );
+  });
 
   return (
     <div className="min-h-screen bg-background text-content py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-500">
@@ -51,6 +68,35 @@ export default function BookingHistoryPage() {
           </Link>
         </div>
 
+        {/* Date Filter Search Bar */}
+        <div className="bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl p-4 sm:p-5 mb-10 shadow-md backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">🗓️</span>
+            <div>
+              <h3 className="text-base font-extrabold text-content">Filter by Date</h3>
+              <p className="text-xs text-muted">Search exact check-ins and checkouts for a specific day</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3 w-full sm:w-auto">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-background text-content border border-border rounded-xl px-4 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary w-full sm:w-auto"
+            />
+            {selectedDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDate('')}
+                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold border border-red-500/20 transition-all cursor-pointer shrink-0"
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Content Area */}
         {loading ? (
           <div className="text-center py-24 bg-surface/40 border border-border rounded-2xl max-w-xl mx-auto backdrop-blur-sm animate-pulse">
@@ -58,87 +104,163 @@ export default function BookingHistoryPage() {
             <p className="text-lg font-bold text-content">Loading reservation logs...</p>
             <p className="text-xs text-muted mt-1">Syncing booking data from secure server</p>
           </div>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-20 bg-surface/60 border border-border rounded-2xl max-w-lg mx-auto p-8 backdrop-blur-md shadow-xl animate-fade-in-up">
-            <span className="text-5xl inline-block mb-4">📋</span>
-            <h3 className="text-xl font-bold text-content">No Booking Records Found</h3>
-            <p className="text-sm text-muted mt-2">
-              No guest house reservations have been recorded in the database yet.
-            </p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-            {bookings.map((booking, idx) => {
-              const membersCount = Array.isArray(booking.members) ? booking.members.length : 1;
-              return (
-                <div
-                  key={booking.id}
-                  style={{ animationDelay: `${idx * 80}ms` }}
-                  className="bg-surface/90 dark:bg-surface/60 rounded-2xl shadow-md hover:shadow-xl border border-border hover:border-primary/50 p-6 flex flex-col justify-between transition-all duration-300 animate-fade-in-up backdrop-blur-sm"
-                >
-                  <div>
-                    {/* Top Status & Room Info */}
-                    <div className="flex justify-between items-start gap-2 pb-4 border-b border-border/60">
-                      <div>
-                        <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
-                          Room #{booking.rooms?.room_number || 'N/A'} • {booking.rooms?.type || 'Suite'}
-                        </span>
-                        <h3 className="text-lg font-extrabold text-content mt-2 truncate">
-                          {booking.rooms?.name || 'Guest Room'}
-                        </h3>
-                      </div>
-                      <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0">
-                        {booking.status}
-                      </span>
-                    </div>
+          <div className="space-y-12">
+            
+            {/* SECTION 1: BOOKINGS LIST (CHECK-INS / ACTIVE) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                <h2 className="text-xl font-extrabold text-content flex items-center gap-2">
+                  <span>📥</span> Check-ins & Active Reservations
+                  <span className="text-xs font-bold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20">
+                    {bookingsList.length}
+                  </span>
+                </h2>
+                {selectedDate && <span className="text-xs text-muted font-bold">Showing check-ins for {selectedDate}</span>}
+              </div>
 
-                    {/* Guest Summary Details */}
-                    <div className="mt-4 space-y-2.5 text-xs sm:text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted font-medium">Primary Guest:</span>
-                        <span className="font-bold text-content truncate max-w-44">{booking.customer_name}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted font-medium">Phone Number:</span>
-                        <span className="font-bold text-content">{booking.customer_phone}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted font-medium">Total Members:</span>
-                        <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-                          👥 {membersCount} {membersCount === 1 ? 'Person' : 'People'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted font-medium">Check-in:</span>
-                        <span className="font-bold text-content">🗓️ {booking.check_in}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted font-medium">Check-out:</span>
-                        <span className="font-bold text-content">🏁 {booking.check_out}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pricing Footer & Action Button */}
-                  <div className="mt-6 pt-4 border-t border-border/80 flex items-center justify-between gap-3">
-                    <div>
-                      <span className="text-xs text-muted block">Total Paid</span>
-                      <span className="text-xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        ₹{booking.total_price}
-                      </span>
-                    </div>
-
-                    <Link
-                      href={`/admin/bookings/${booking.id}`}
-                      className="px-5 py-2.5 bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-primary/30 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
-                    >
-                      <span>👁️</span>
-                      <span>View Details</span>
-                    </Link>
+              {bookingsList.length === 0 ? (
+                <div className="bg-surface/50 border border-border rounded-2xl p-8 text-center text-muted text-sm italic">
+                  No active reservations or check-ins found {selectedDate ? `for ${selectedDate}` : ''}.
+                </div>
+              ) : (
+                <div className="bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl overflow-hidden shadow-md backdrop-blur-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-background/80 border-b border-border text-muted uppercase tracking-wider text-[11px] font-bold">
+                          <th className="p-4">Room</th>
+                          <th className="p-4">Primary Guest</th>
+                          <th className="p-4">Phone</th>
+                          <th className="p-4">Members</th>
+                          <th className="p-4">Check-in</th>
+                          <th className="p-4">Check-out</th>
+                          <th className="p-4">Paid</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        {bookingsList.map((booking) => {
+                          const membersCount = Array.isArray(booking.members) ? booking.members.length : 1;
+                          return (
+                            <tr key={booking.id} className="hover:bg-surface-hover/50 transition-colors">
+                              <td className="p-4 font-extrabold text-primary whitespace-nowrap">
+                                #{booking.rooms?.room_number || 'N/A'} <span className="text-[10px] font-normal text-muted">({booking.rooms?.type || 'Suite'})</span>
+                              </td>
+                              <td className="p-4 font-bold text-content whitespace-nowrap">{booking.customer_name}</td>
+                              <td className="p-4 text-muted whitespace-nowrap">{booking.customer_phone}</td>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className="bg-primary/10 text-primary font-bold px-2 py-0.5 rounded border border-primary/20">
+                                  👥 {membersCount}
+                                </span>
+                              </td>
+                              <td className="p-4 font-bold text-emerald-500 whitespace-nowrap">🗓️ {booking.check_in}</td>
+                              <td className="p-4 font-bold text-content whitespace-nowrap">🏁 {booking.check_out}</td>
+                              <td className="p-4 font-extrabold text-content whitespace-nowrap">₹{booking.total_price}</td>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                  {booking.status}
+                                </span>
+                              </td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                <Link
+                                  href={`/admin/bookings/${booking.id}`}
+                                  className="px-4 py-2 bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow hover:shadow-primary/30 transition-all inline-flex items-center gap-1 cursor-pointer active:scale-95"
+                                >
+                                  <span>👁️</span>
+                                  <span>Details</span>
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
+
+            {/* SECTION 2: CHECKOUTS LIST (DEPARTED / COMPLETED) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                <h2 className="text-xl font-extrabold text-content flex items-center gap-2">
+                  <span>📤</span> Departed & Checkouts
+                  <span className="text-xs font-bold bg-accent/10 text-accent px-2.5 py-0.5 rounded-full border border-accent/20">
+                    {checkoutsList.length}
+                  </span>
+                </h2>
+                {selectedDate && <span className="text-xs text-muted font-bold">Showing checkouts for {selectedDate}</span>}
+              </div>
+
+              {checkoutsList.length === 0 ? (
+                <div className="bg-surface/50 border border-border rounded-2xl p-8 text-center text-muted text-sm italic">
+                  No departed guests or checkouts found {selectedDate ? `for ${selectedDate}` : ''}.
+                </div>
+              ) : (
+                <div className="bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl overflow-hidden shadow-md backdrop-blur-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-background/80 border-b border-border text-muted uppercase tracking-wider text-[11px] font-bold">
+                          <th className="p-4">Room</th>
+                          <th className="p-4">Primary Guest</th>
+                          <th className="p-4">Phone</th>
+                          <th className="p-4">Members</th>
+                          <th className="p-4">Check-in</th>
+                          <th className="p-4">Actual Departure</th>
+                          <th className="p-4">Paid</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        {checkoutsList.map((booking) => {
+                          const membersCount = Array.isArray(booking.members) ? booking.members.length : 1;
+                          const departureTime = booking.actual_checkout_time 
+                            ? new Date(booking.actual_checkout_time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                            : `🏁 ${booking.check_out}`;
+
+                          return (
+                            <tr key={booking.id} className="hover:bg-surface-hover/50 transition-colors opacity-85 hover:opacity-100">
+                              <td className="p-4 font-extrabold text-muted whitespace-nowrap">
+                                #{booking.rooms?.room_number || 'N/A'} <span className="text-[10px] font-normal text-muted">({booking.rooms?.type || 'Suite'})</span>
+                              </td>
+                              <td className="p-4 font-bold text-content whitespace-nowrap">{booking.customer_name}</td>
+                              <td className="p-4 text-muted whitespace-nowrap">{booking.customer_phone}</td>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className="bg-background text-muted font-bold px-2 py-0.5 rounded border border-border">
+                                  👥 {membersCount}
+                                </span>
+                              </td>
+                              <td className="p-4 text-muted whitespace-nowrap">🗓️ {booking.check_in}</td>
+                              <td className="p-4 font-bold text-accent whitespace-nowrap">⚡ {departureTime}</td>
+                              <td className="p-4 font-extrabold text-content whitespace-nowrap">₹{booking.total_price}</td>
+                              <td className="p-4 whitespace-nowrap">
+                                <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                  Checked Out
+                                </span>
+                              </td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                <Link
+                                  href={`/admin/bookings/${booking.id}`}
+                                  className="px-4 py-2 bg-surface hover:bg-surface-hover text-content border border-border rounded-xl text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1 cursor-pointer active:scale-95"
+                                >
+                                  <span>👁️</span>
+                                  <span>Details</span>
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
       </div>
