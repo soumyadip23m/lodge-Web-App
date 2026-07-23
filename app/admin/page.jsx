@@ -5,11 +5,18 @@ import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import RoomEditorModal from '../../components/admin/RoomEditorModal';
 
+const PRESET_BRANCHES = [
+  'ALL',
+  'New Bay View (at New Digha)',
+  'Bay View (at Old Digha)'
+];
+
 export default function AdminDashboard() {
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedBranch, setSelectedBranch] = useState('ALL');
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -24,6 +31,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchRooms();
   }, []);
+
+  // Filter rooms dynamically based on selected branch location
+  const filteredRooms = rooms.filter((room) => {
+    if (selectedBranch === 'ALL') return true;
+    return (room.branch || 'New Bay View (at New Digha)') === selectedBranch;
+  });
 
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this room? This cannot be undone!')) {
@@ -41,7 +54,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto animate-fade-in-up">
         
         {/* Executive Dashboard Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-10 pb-6 border-b border-border/80 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 pb-6 border-b border-border/80 dark:border-slate-800">
           <div>
             <div className="flex items-center space-x-2">
               <span className="h-2 w-2 rounded-full bg-accent animate-ping"></span>
@@ -51,7 +64,7 @@ export default function AdminDashboard() {
               Admin Room Management
             </h1>
             <p className="text-muted text-sm sm:text-base mt-1.5">
-              Update picture galleries, specifications, live pricing, and room availability.
+              Select a branch location below to manage its inventory, pricing, and availability.
             </p>
           </div>
           
@@ -74,6 +87,38 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* BRANCH LOCATION SELECTOR PILLS */}
+        <div className="bg-surface/80 dark:bg-surface/50 border border-border rounded-2xl p-4 mb-10 shadow-md backdrop-blur-md">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <span>📍</span> Active Branch Filter: <strong className="text-content">{selectedBranch === 'ALL' ? 'All Locations' : selectedBranch}</strong>
+            </span>
+            <span className="text-xs font-bold text-muted bg-background px-2.5 py-1 rounded-lg border border-border">
+              🏨 Showing {filteredRooms.length} {filteredRooms.length === 1 ? 'Room' : 'Rooms'}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {PRESET_BRANCHES.map((branch) => {
+              const isSelected = selectedBranch === branch;
+              return (
+                <button
+                  key={branch}
+                  onClick={() => setSelectedBranch(branch)}
+                  className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer flex items-center gap-1.5 border ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent text-white border-transparent shadow-lg shadow-primary/25 scale-102'
+                      : 'bg-background hover:bg-surface-hover text-muted hover:text-content border-border'
+                  }`}
+                >
+                  <span>{branch === 'ALL' ? '🌐' : '🏢'}</span>
+                  <span>{branch === 'ALL' ? 'All Branches' : branch}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Catalog Content Area */}
         {loading ? (
           <div className="text-center py-24 bg-surface/40 border border-border rounded-2xl max-w-xl mx-auto backdrop-blur-sm animate-pulse">
@@ -81,18 +126,26 @@ export default function AdminDashboard() {
             <p className="text-lg font-bold text-content">Loading database inventory...</p>
             <p className="text-xs text-muted mt-1">Syncing room details and availability</p>
           </div>
-        ) : rooms.length === 0 ? (
+        ) : filteredRooms.length === 0 ? (
           <div className="text-center py-20 bg-surface/60 border border-border rounded-2xl max-w-lg mx-auto p-8 backdrop-blur-md shadow-xl animate-fade-in-up">
-            <span className="text-5xl inline-block mb-4">🏨</span>
-            <h3 className="text-xl font-bold text-content">No Rooms in Inventory</h3>
+            <span className="text-5xl inline-block mb-4">📍</span>
+            <h3 className="text-xl font-bold text-content">No Rooms Found in this Branch</h3>
             <p className="text-sm text-muted mt-2">
-              You haven&apos;t added any guest house suites yet. Click the button above to create your first room!
+              There are currently no suites assigned to <strong className="text-primary">{selectedBranch === 'ALL' ? 'any location' : selectedBranch}</strong>.
             </p>
+            {selectedBranch !== 'ALL' && (
+              <button
+                onClick={() => setSelectedBranch('ALL')}
+                className="mt-6 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold shadow transition-all cursor-pointer"
+              >
+                Show All Branches
+              </button>
+            )}
           </div>
         ) : (
           /* Stretched Grid Container for Equal Card Heights */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-            {rooms.map((room, idx) => (
+            {filteredRooms.map((room, idx) => (
               <div 
                 key={room.id} 
                 style={{ animationDelay: `${idx * 100}ms` }}
@@ -139,6 +192,9 @@ export default function AdminDashboard() {
                       <h3 className="font-bold text-xl text-content leading-snug">{room.name}</h3>
                       <span className="text-sm font-bold text-primary shrink-0">#{room.room_number}</span>
                     </div>
+                    <span className="inline-block text-[11px] font-bold text-muted bg-background px-2.5 py-0.5 rounded border border-border/80 mt-1">
+                      📍 {room.branch || 'New Bay View (at New Digha)'}
+                    </span>
                     
                     {/* Wrapped Amenity Pills */}
                     <div className="mt-4 flex flex-wrap gap-1.5">
@@ -187,6 +243,7 @@ export default function AdminDashboard() {
         {isModalOpen && (
           <RoomEditorModal
             room={selectedRoom}
+            currentBranch={selectedBranch !== 'ALL' ? selectedBranch : 'New Bay View (at New Digha)'}
             onClose={() => setIsModalOpen(false)}
             onSave={fetchRooms}
           />

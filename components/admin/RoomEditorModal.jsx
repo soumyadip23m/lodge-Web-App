@@ -15,6 +15,11 @@ const PRESET_ROOM_NAMES = [
   'Royal Panorama Suite',
 ];
 
+const PRESET_BRANCH_OPTIONS = [
+  'New Bay View (at New Digha)',
+  'Bay View (at Old Digha)'
+];
+
 const PRESET_AMENITIES = [
   'High-Speed Wi-Fi',
   'Smart TV',
@@ -30,9 +35,10 @@ const PRESET_AMENITIES = [
   'Complimentary Breakfast',
 ];
 
-export default function RoomEditorModal({ room, onClose, onSave }) {
+export default function RoomEditorModal({ room, currentBranch, onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: room?.name || PRESET_ROOM_NAMES[0],
+    branch: room?.branch || currentBranch || PRESET_BRANCH_OPTIONS[0],
     room_number: room?.room_number || '',
     type: room?.type || 'AC',
     price_per_night: room?.price_per_night || '',
@@ -166,6 +172,29 @@ export default function RoomEditorModal({ room, onClose, onSave }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* BRANCH LOCATION DROPDOWN */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-content mb-1.5 flex items-center gap-1">
+                <span>📍</span> Assign Branch Location <span className="text-red-500">*</span>
+              </label>
+              <select 
+                value={formData.branch} 
+                onChange={(e) => setFormData({ ...formData, branch: e.target.value })} 
+                className="w-full bg-surface-hover hover:bg-primary/10 text-content border border-border hover:border-primary/50 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary font-bold cursor-pointer shadow-sm transition-all"
+              >
+                {PRESET_BRANCH_OPTIONS.map((branchOpt) => (
+                  <option key={branchOpt} value={branchOpt} className="bg-surface text-content py-1">
+                    🏢 {branchOpt}
+                  </option>
+                ))}
+                {formData.branch && !PRESET_BRANCH_OPTIONS.includes(formData.branch) && (
+                  <option value={formData.branch} className="bg-surface text-content py-1">
+                    🏢 {formData.branch} (Custom)
+                  </option>
+                )}
+              </select>
+            </div>
+
             {/* ROOM NAME DROPDOWN */}
             <div>
               <label className="block text-sm font-bold text-content mb-1.5">Room Name</label>
@@ -179,7 +208,6 @@ export default function RoomEditorModal({ room, onClose, onSave }) {
                     🏨 {nameOption}
                   </option>
                 ))}
-                {/* Fallback to display existing custom name if not in preset list */}
                 {formData.name && !PRESET_ROOM_NAMES.includes(formData.name) && (
                   <option value={formData.name} className="bg-surface text-content py-1">
                     🏨 {formData.name} (Custom)
