@@ -13,13 +13,14 @@ export default function BookingModal({ room, onClose, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
 
-  // Calculate nights and total price
+  // Calculate nights and total price based on date difference
   const calculateTotal = () => {
     if (!formData.check_in || !formData.check_out) return room.price_per_night;
     const start = new Date(formData.check_in);
     const end = new Date(formData.check_out);
-    const diffTime = Math.abs(end - start);
+    const diffTime = end - start;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // If invalid date range or same day, default to 1 night minimum
     return diffDays > 0 ? diffDays * room.price_per_night : room.price_per_night;
   };
 
@@ -37,15 +38,15 @@ export default function BookingModal({ room, onClose, onSuccess }) {
 
     const { error } = await supabase.from('bookings').insert([payload]);
     
-    // Update room availability status upon booking
-    await supabase.from('rooms').update({ is_available: false }).eq('id', room.id);
-
-    setLoading(false);
     if (!error) {
-      alert(`Booking confirmed for Room #${room.room_number}! Total: ₹${totalPrice}`);
+      // Mark room as occupied in the catalog upon successful reservation
+      await supabase.from('rooms').update({ is_available: false }).eq('id', room.id);
+      setLoading(false);
+      alert(`🎉 Reservation Confirmed for Room #${room.room_number}!\nTotal Amount: ₹${totalPrice}`);
       onSuccess();
       onClose();
     } else {
+      setLoading(false);
       alert('Booking failed: ' + error.message);
     }
   };
@@ -63,7 +64,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
           <button 
             type="button" 
             onClick={onClose} 
-            className="text-muted hover:text-content text-lg font-bold w-8 h-8 rounded-full bg-background hover:bg-surface-hover flex items-center justify-center transition-all border border-border"
+            className="text-muted hover:text-content text-lg font-bold w-8 h-8 rounded-full bg-background hover:bg-surface-hover flex items-center justify-center transition-all border border-border cursor-pointer"
           >
             ✕
           </button>
@@ -77,7 +78,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
               required
               value={formData.customer_name}
               onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-              className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium"
+              className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm"
               placeholder="John Doe"
             />
           </div>
@@ -90,7 +91,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                 required
                 value={formData.customer_email}
                 onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
-                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium"
+                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm"
                 placeholder="you@example.com"
               />
             </div>
@@ -101,31 +102,37 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                 required
                 value={formData.customer_phone}
                 onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium"
+                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm"
                 placeholder="+91 98765 43210"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* BUTTON-STYLE DATE PICKER FIELDS */}
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1">Check-in Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+                <span>🗓️</span> Check-in Date
+              </label>
               <input
                 type="date"
                 required
                 value={formData.check_in}
                 onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
-                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium cursor-pointer"
+                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1">Check-out Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+                <span>🏁</span> Check-out Date
+              </label>
               <input
                 type="date"
                 required
+                min={formData.check_in || undefined} // Prevents selecting a check-out date before check-in
                 value={formData.check_out}
                 onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
-                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium cursor-pointer"
+                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
               />
             </div>
           </div>
