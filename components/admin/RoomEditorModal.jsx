@@ -79,11 +79,17 @@ export default function RoomEditorModal({ room, onClose, onSave }) {
     }
 
     setLoading(false);
+    
     if (!result.error) {
       onSave();
       onClose();
     } else {
-      alert('Error saving room: ' + result.error.message);
+      // Intercept the duplicate key error and show a friendly message
+      if (result.error.message.includes('rooms_room_number_key') || result.error.code === '23505') {
+        alert(`⚠️ Room #${formData.room_number} already exists in your system! Please choose a different room number.`);
+      } else {
+        alert('Error saving room: ' + result.error.message);
+      }
     }
   };
 

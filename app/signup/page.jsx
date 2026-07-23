@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
-import ThemeToggle from '../../components/ThemeToggle';
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -14,6 +13,15 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const router = useRouter();
+
+  // Automatically pre-fill email if redirected from the login page
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, []);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -42,68 +50,64 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
-      <div className="absolute top-6 right-6">
-        <ThemeToggle />
-      </div>
-
+    <div className="min-h-screen bg-background text-content flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-300">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+        <h2 className="text-center text-3xl font-extrabold tracking-tight">
           Create Customer Account
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-2 text-center text-sm text-muted">
           Join Bay View Guest House to book and manage your stays
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-800 py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100 dark:border-slate-700 transition-colors">
+        <div className="bg-surface py-8 px-6 shadow-xl sm:rounded-2xl sm:px-10 border border-border transition-colors">
           {error && (
-            <div className="mb-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 text-red-700 dark:text-red-300 text-sm font-medium">
+            <div className="mb-4 bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-lg text-red-600 dark:text-red-400 text-sm font-medium animate-fadeIn">
               {error}
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 text-green-700 dark:text-green-300 text-sm font-medium">
+            <div className="mb-4 bg-green-500/10 border-l-4 border-green-500 p-4 rounded-r-lg text-green-600 dark:text-green-400 text-sm font-medium animate-fadeIn">
               {successMsg}
             </div>
           )}
 
-          <form onSubmit={handleSignUp} className="space-y-6">
+          <form onSubmit={handleSignUp} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Full Name</label>
+              <label className="block text-sm font-semibold text-content">Full Name</label>
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1.5 block w-full px-3.5 py-2.5 bg-background border border-border rounded-lg shadow-sm text-content focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Email Address</label>
+              <label className="block text-sm font-semibold text-content">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1.5 block w-full px-3.5 py-2.5 bg-background border border-border rounded-lg shadow-sm text-content focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Password</label>
+              <label className="block text-sm font-semibold text-content">Password</label>
               <input
                 type="password"
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1.5 block w-full px-3.5 py-2.5 bg-background border border-border rounded-lg shadow-sm text-content focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 placeholder="Minimum 6 characters"
               />
             </div>
@@ -111,16 +115,16 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-all active:scale-[0.99]"
             >
               {loading ? 'Creating Account...' : 'Sign Up Now'}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-gray-200 dark:border-slate-700 pt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-slate-400">
+          <div className="mt-6 border-t border-border pt-6 text-center">
+            <p className="text-sm text-muted">
               Already have an account?{' '}
-              <Link href="/login" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+              <Link href="/login" className="font-bold text-primary hover:underline">
                 Sign in here
               </Link>
             </p>
