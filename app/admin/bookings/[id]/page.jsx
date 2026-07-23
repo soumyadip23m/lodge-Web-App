@@ -10,6 +10,35 @@ export default function BookingDetailsPage() {
   const router = useRouter();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingCheckout, setIsEditingCheckout] = useState(false);
+  const [actualCheckout, setActualCheckout] = useState('');
+  const [updating, setUpdating] = useState(false);
+
+  const handleEarlyCheckout = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({ 
+        actual_checkout_time: actualCheckout,
+        status: 'checked_out'
+      })
+      .eq('id', id);
+
+    if (!error) {
+      // Automatically release the room back to available inventory
+      if (booking.room_id) {
+        await supabase.from('rooms').update({ is_available: true }).eq('id', booking.room_id);
+      }
+      setBooking((prev) => ({ ...prev, actual_checkout_time: actualCheckout, status: 'checked_out' }));
+      setIsEditingCheckout(false);
+      alert('✅ Early checkout date & time recorded! Room marked as available.');
+    } else {
+      alert('Error updating checkout: ' + error.message);
+    }
+    setUpdating(false);
+  };
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
@@ -107,7 +136,28 @@ export default function BookingDetailsPage() {
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">Stay Schedule & Status</span>
             <span className="text-sm font-bold text-content block">🗓️ In: {booking.check_in}</span>
-            <span className="text-sm font-bold text-content block">🏁 Out: {booking.check_out}</span>
+            <span className="text-sm font-bold text-content block">🏁 Scheduled Out: {booking.check_out}</span>
+            
+            {booking.actual_checkout_time ? (
+              <span className="text-xs font-extrabold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 mt-1.5 inline-block">
+                ⚡ Left Early: {new Date(booking.actual_checkout_time).toLocaleString()}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  // Pre-fill with current local date-time
+                  const now = new Date();
+                  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                  setActualCheckout(now.toISOString().slice(0, 16));
+                  setIsEditingCheckout(true);
+                }}
+                className="mt-2 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-bold border border-primary/20 transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+              >
+                <span>⚡</span>
+                <span>Edit Early Checkout</span>
+              </button>
+            )}
           </div>
 
           <div>
@@ -198,6 +248,62 @@ export default function BookingDetailsPage() {
         </div>
 
       </div>
+
+      {/* EARLY CHECKOUT EDIT MODAL */}
+      {isEditingCheckout && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-surface/95 dark:bg-surface/90 text-content border border-border dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl backdrop-blur-xl animate-fade-in-up">
+            <div className="flex justify-between items-center pb-3 border-b border-border/80 mb-4">
+              <h3 className="text-lg font-extrabold text-content flex items-center gap-1.5">
+                <span>⚡</span> Record Early Departure
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setIsEditingCheckout(false)} 
+                className="text-muted hover:text-content text-lg font-bold w-7 h-7 rounded-full bg-background hover:bg-surface-hover flex items-center justify-center transition-all border border-border cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEarlyCheckout} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                  Select Actual Checkout Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={actualCheckout}
+                  onChange={(e) => setActualCheckout(e.target.value)}
+                  className="w-full bg-background text-content border border-border rounded-xl p-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary"
+                />
+              </div>
+
+              <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl text-xs text-primary font-medium">
+                💡 Saving this will update the departure log and immediately switch Room #{booking.rooms?.room_number || ''} back to <strong>Live / Available</strong>.
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingCheckout(false)}
+                  className="px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-surface-hover transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="px-5 py-2 bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-primary/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {updating ? 'Saving...' : 'Confirm Checkout'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
