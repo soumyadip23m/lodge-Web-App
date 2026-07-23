@@ -40,6 +40,64 @@ export default function BookingHistoryPage() {
     );
   });
 
+  // Export ONLY currently viewed/searched results with EXACT unaltered ID, Phone & individual Member data
+  const exportFilteredToExcel = () => {
+    const visibleRecords = [...bookingsList, ...checkoutsList];
+    
+    if (visibleRecords.length === 0) {
+      alert('⚠️ No booking records available to export for this view/date!');
+      return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    // Expanded headers to include every individual member's exact data
+    csvContent += "Booking Ref ID,Room Number,Room Category,Check-in Date,Check-out Date,Actual Departure,Member Name,Age,Phone Number,Email Address,ID Document Type,Exact ID Number,Total Paid (INR),Status\r\n";
+
+    visibleRecords.forEach((b) => {
+      const id = `"${b.id || ''}"`;
+      const roomNum = `"${b.rooms?.room_number || 'N/A'}"`;
+      const roomType = `"${b.rooms?.type || 'Suite'}"`;
+      const checkIn = `"${b.check_in || ''}"`;
+      const checkOut = `"${b.check_out || ''}"`;
+      const actualOut = `"${b.actual_checkout_time ? new Date(b.actual_checkout_time).toLocaleString() : '-'}"`;
+      const paid = `"${b.total_price || 0}"`;
+      const status = `"${b.status || ''}"`;
+      const phone = b.customer_phone || '-';
+      const email = b.customer_email || '-';
+
+      const membersList = Array.isArray(b.members) && b.members.length > 0
+        ? b.members
+        : [{
+            name: b.customer_name,
+            age: b.age || 'N/A',
+            id_type: b.id_type || 'Aadhaar Card',
+            id_number: b.id_number || 'N/A'
+          }];
+
+      // Iterate through every person in the room so all member details get exported verbatim
+      membersList.forEach((m, index) => {
+        const memberName = `"${m.name || 'Unnamed'}"`;
+        const memberAge = `"${m.age || 'N/A'}"`;
+        // Prepending a tab (\t) inside quotes prevents Excel from changing long numeric strings (like Aadhaar or phone numbers) into scientific notation (E+11)
+        const memberPhone = index === 0 ? `"\t${phone}"` : '"-"';
+        const memberEmail = index === 0 ? `"${email}"` : '"-"';
+        const idType = `"${m.id_type || 'Aadhaar Card'}"`;
+        const exactIdNum = `"\t${m.id_number || 'N/A'}"`;
+
+        csvContent += `${id},${roomNum},${roomType},${checkIn},${checkOut},${actualOut},${memberName},${memberAge},${memberPhone},${memberEmail},${idType},${exactIdNum},${paid},${status}\r\n`;
+      });
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    const dateTag = selectedDate ? `_${selectedDate}` : '_All_Records';
+    link.setAttribute("download", `Room_Bookings_Detailed_Report${dateTag}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-background text-content py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-500">
       <div className="max-w-7xl mx-auto animate-fade-in-up">
@@ -78,22 +136,32 @@ export default function BookingHistoryPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-background text-content border border-border rounded-xl px-4 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary w-full sm:w-auto"
+              className="bg-background text-content border border-border rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary w-full sm:w-auto"
             />
+            
             {selectedDate && (
               <button
                 type="button"
                 onClick={() => setSelectedDate('')}
-                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold border border-red-500/20 transition-all cursor-pointer shrink-0"
+                className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold border border-red-500/20 transition-all cursor-pointer shrink-0 active:scale-95"
               >
-                Clear Filter
+                Clear
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={exportFilteredToExcel}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95 w-full sm:w-auto justify-center"
+            >
+              <span>📊</span>
+              <span>Export {selectedDate ? 'Searched' : 'All'} to Excel</span>
+            </button>
           </div>
         </div>
 
