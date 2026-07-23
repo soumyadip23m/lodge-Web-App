@@ -5,11 +5,22 @@ import { supabase } from '../../lib/supabase';
 import RoomCard from '../../components/user/RoomCard';
 import BookingModal from '../../components/user/BookingModal';
 
+const PRESET_BRANCHES = [
+  'ALL',
+  'New Bay View (at New Digha)',
+  'Bay View (at Old Digha)'
+];
+
 export default function CustomerRoomsPage() {
   const [rooms, setRooms] = useState([]);
-  const [filter, setFilter] = useState('ALL'); // 'ALL', 'AC', 'Non-AC'
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Customer Requirement Filter States
+  const [selectedBranch, setSelectedBranch] = useState('ALL');
+  const [selectedType, setSelectedType] = useState('ALL'); // 'ALL', 'AC', or 'Non-AC'
+  const [maxPrice, setMaxPrice] = useState('');
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -25,9 +36,13 @@ export default function CustomerRoomsPage() {
     fetchRooms();
   }, []);
 
+  // Dynamically filter rooms based on customer requirements
   const filteredRooms = rooms.filter((room) => {
-    if (filter === 'ALL') return true;
-    return room.type === filter;
+    const matchBranch = selectedBranch === 'ALL' || (room.branch || 'New Bay View (at New Digha)') === selectedBranch;
+    const matchType = selectedType === 'ALL' || room.type === selectedType;
+    const matchPrice = !maxPrice || room.price_per_night <= parseFloat(maxPrice);
+    const matchAvailability = !onlyAvailable || room.is_available === true;
+    return matchBranch && matchType && matchPrice && matchAvailability;
   });
 
   return (
@@ -53,25 +68,96 @@ export default function CustomerRoomsPage() {
             Choose from our premium air-conditioned suites and comfortable standard rooms. Click any photo to open the full-screen interactive gallery.
           </p>
 
-          {/* AC / Non-AC Glassmorphic Filters */}
-          <div className="mt-8 flex flex-wrap justify-center gap-2 sm:gap-3">
-            {[
-              { id: 'ALL', label: '🏨 All Rooms' },
-              { id: 'AC', label: '❄️ AC Suites Only' },
-              { id: 'Non-AC', label: '🍃 Standard Non-AC' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFilter(tab.id)}
-                className={`px-6 py-2.5 rounded-xl font-bold text-sm sm:text-base shadow-sm transition-all duration-300 cursor-pointer ${
-                  filter === tab.id
-                    ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent text-white shadow-lg shadow-primary/25 scale-105'
-                    : 'bg-surface/80 hover:bg-surface text-content border border-border hover:border-primary/40 backdrop-blur-md hover:scale-102'
-                }`}
+          </div>
+
+        {/* INTERACTIVE CUSTOMER REQUIREMENT FILTER BAR */}
+        <div className="mt-8 bg-surface/80 dark:bg-surface/50 border border-border rounded-2xl p-5 mb-10 shadow-lg backdrop-blur-md space-y-4 animate-fade-in-up">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-border/80 pb-3">
+            <span className="text-sm font-extrabold text-content flex items-center gap-1.5">
+              <span>🔍</span> Filter By Your Desired Requirements
+            </span>
+            <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+              🏨 Showing {filteredRooms.length} Available {filteredRooms.length === 1 ? 'Suite' : 'Suites'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
+            {/* 1. Branch Location Selector */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                📍 Select Branch Location
+              </label>
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer transition-all"
               >
-                {tab.label}
+                {PRESET_BRANCHES.map((branch) => (
+                  <option key={branch} value={branch} className="bg-surface text-content">
+                    {branch === 'ALL' ? '🌐 All Digha Locations' : `🏢 ${branch}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 2. AC / Non-AC Category */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                ❄️ Room Category
+              </label>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer transition-all"
+              >
+                <option value="ALL" className="bg-surface text-content">⚡ All Types (AC & Non-AC)</option>
+                <option value="AC" className="bg-surface text-content">❄️ AC Room Only</option>
+                <option value="Non-AC" className="bg-surface text-content">🍃 Non-AC Room Only</option>
+              </select>
+            </div>
+
+            {/* 3. Max Price Budget */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                💰 Max Budget (/ Night)
+              </label>
+              <input
+                type="number"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                placeholder="e.g., 3000"
+                className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-all placeholder:text-muted/60"
+              />
+            </div>
+          </div>
+
+          {/* Quick Toggle & Reset Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border/60">
+            <label className="flex items-center space-x-2 text-xs font-bold text-content cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={onlyAvailable}
+                onChange={(e) => setOnlyAvailable(e.target.checked)}
+                className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+              />
+              <span>🟢 Show Available Rooms Only (Hide Booked)</span>
+            </label>
+
+            {(selectedBranch !== 'ALL' || selectedType !== 'ALL' || maxPrice !== '' || onlyAvailable) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBranch('ALL');
+                  setSelectedType('ALL');
+                  setMaxPrice('');
+                  setOnlyAvailable(false);
+                }}
+                className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+              >
+                <span>✕</span>
+                <span>Reset All Filters</span>
               </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -86,18 +172,21 @@ export default function CustomerRoomsPage() {
           /* Empty State Fallback */
           <div className="mt-16 text-center py-16 bg-surface/60 border border-border rounded-2xl max-w-lg mx-auto p-8 backdrop-blur-md shadow-xl animate-fade-in-up">
             <span className="text-5xl inline-block mb-4">🔍</span>
-            <h3 className="text-xl font-bold text-content">No Rooms Found</h3>
+            <h3 className="text-xl font-bold text-content">No Rooms Match Your Requirements</h3>
             <p className="text-sm text-muted mt-2">
-              We couldn&apos;t find any rooms matching the <strong className="text-primary">{filter}</strong> category right now.
+              We couldn&apos;t find any suites matching your branch location, budget, or category preferences right now.
             </p>
-            {filter !== 'ALL' && (
-              <button
-                onClick={() => setFilter('ALL')}
-                className="mt-6 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer"
-              >
-                Show All Rooms
-              </button>
-            )}
+            <button
+              onClick={() => {
+                setSelectedBranch('ALL');
+                setSelectedType('ALL');
+                setMaxPrice('');
+                setOnlyAvailable(false);
+              }}
+              className="mt-6 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer active:scale-95"
+            >
+              Reset Filters & View All Rooms
+            </button>
           </div>
         ) : (
           /* Room Cards Grid */
