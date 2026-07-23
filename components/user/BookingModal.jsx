@@ -17,6 +17,9 @@ export default function BookingModal({ room, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState(null);
 
+  // Calculate today's local date in YYYY-MM-DD format to block past date selections
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
   const handleMemberChange = (index, field, value) => {
     const updatedMembers = [...formData.members];
     updatedMembers[index][field] = value;
@@ -81,6 +84,22 @@ export default function BookingModal({ room, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Strict safety check to prevent past check-in dates
+    if (formData.check_in < today) {
+      alert('⚠️ Check-in date cannot be in the past! Please select today or a future date.');
+      return;
+    }
+
+    // Strict safety check for mandatory member fields including Age
+    for (let i = 0; i < formData.members.length; i++) {
+      const m = formData.members[i];
+      if (!m.name.trim() || !String(m.age).trim() || Number(m.age) <= 0 || !m.id_number.trim() || !m.id_image_url) {
+        alert(`⚠️ Please complete all mandatory fields (Name, Age, ID Number, and ID Photo) for Member #${i + 1}.`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     const totalPrice = calculateTotal();
@@ -277,28 +296,34 @@ export default function BookingModal({ room, onClose, onSuccess }) {
             ))}
           </div>
 
-          {/* BUTTON-STYLE DATE PICKER FIELDS */}
+          {/* BUTTON-STYLE DATE PICKER FIELDS WITH PAST DATE RESTRICTION */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
-                <span>🗓️</span> Check-in Date
+                <span>🗓️</span> Check-in Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 required
+                min={today} // Restricts date selection to start from present date only
                 value={formData.check_in}
-                onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
+                onChange={(e) => {
+                  const newCheckIn = e.target.value;
+                  // If existing check-out is before new check-in, reset check-out
+                  const newCheckOut = formData.check_out && formData.check_out < newCheckIn ? '' : formData.check_out;
+                  setFormData({ ...formData, check_in: newCheckIn, check_out: newCheckOut });
+                }}
                 className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
               />
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
-                <span>🏁</span> Check-out Date
+                <span>🏁</span> Check-out Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 required
-                min={formData.check_in || undefined} // Prevents selecting a check-out date before check-in
+                min={formData.check_in || today} // Prevents selecting a check-out date before check-in or present date
                 value={formData.check_out}
                 onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
                 className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
@@ -316,7 +341,14 @@ export default function BookingModal({ room, onClose, onSuccess }) {
 
           <button
             type="submit"
-            disabled={loading || uploadingIndex !== null || formData.members.some((m) => !m.id_image_url || !m.name || !m.id_number || !m.age)}
+            disabled={
+              loading ||
+              uploadingIndex !== null ||
+              !formData.check_in ||
+              !formData.check_out ||
+              formData.check_in < today ||
+              formData.members.some((m) => !m.id_image_url || !m.name.trim() || !m.id_number.trim() || !String(m.age).trim() || Number(m.age) <= 0)
+            }
             className="w-full mt-4 bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex justify-center items-center space-x-2"
           >
             <span>{loading ? '⏳' : uploadingIndex !== null ? '⬆️' : '⚡'}</span>
