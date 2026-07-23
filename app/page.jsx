@@ -2,28 +2,36 @@ import Link from 'next/link';
 
 export default function HomePage() {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col justify-center items-center p-6 text-center">
-            <div className="max-w-3xl">
-                <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wider">
-                    Welcome to
-                </span>
-                <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl mt-4 mb-6">
+        <div className="relative min-h-screen bg-background text-content flex flex-col justify-center items-center p-6 text-center overflow-hidden transition-colors duration-500">
+            {/* Ambient Background Glowing Blobs for Dark Mode Depth */}
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 dark:bg-primary/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/15 dark:bg-accent/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+
+            <div className="relative z-10 max-w-4xl animate-fade-in-up">
+                <div className="inline-block animate-float">
+                    <span className="bg-primary/10 dark:bg-surface/80 text-primary dark:text-accent border border-primary/20 dark:border-accent/30 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest shadow-sm backdrop-blur-md">
+                        ✨ Luxury Coastal Sanctuary
+                    </span>
+                </div>
+                
+                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mt-6 mb-6 bg-gradient-to-r from-content via-primary to-accent bg-clip-text text-transparent">
                     Bay View Guest House
                 </h1>
-                <p className="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed">
-                    Experience comfort and luxury by the bay. Browse our premium air-conditioned suites, check live availability, and book your stay in seconds.
+                
+                <p className="text-lg sm:text-xl text-muted max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+                    Experience unmatched comfort by the bay. Browse our premium air-conditioned suites, view interactive photo galleries, and reserve your stay in seconds.
                 </p>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-5">
                     <Link
                         href="/rooms"
-                        className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg shadow-lg shadow-indigo-600/30 transition-all duration-200"
+                        className="px-8 py-4 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 animate-pulse-glow"
                     >
                         Explore Available Rooms
                     </Link>
                     <Link
                         href="/login"
-                        className="px-8 py-3.5 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl font-bold text-lg backdrop-blur-sm transition-all duration-200"
+                        className="px-8 py-4 bg-surface hover:bg-surface-hover text-content border border-border rounded-xl font-bold text-lg shadow-sm hover:border-primary/50 hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-md"
                     >
                         Login / Admin Portal
                     </Link>

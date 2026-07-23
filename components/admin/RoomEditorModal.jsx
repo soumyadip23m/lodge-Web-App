@@ -94,84 +94,180 @@ export default function RoomEditorModal({ room, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-2">
-          {room ? 'Edit Room Details' : 'Add New Room'}
-        </h3>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+      <div className="bg-surface/95 dark:bg-surface/90 text-content border border-border dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto backdrop-blur-xl animate-fade-in-up transition-colors duration-300">
+        
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-border/80 pb-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <span className="text-xl">🛠️</span>
+            <h3 className="text-2xl font-extrabold text-content tracking-tight">
+              {room ? 'Edit Room Specifications' : 'Add New Room'}
+            </h3>
+          </div>
+          <button 
+            type="button" 
+            onClick={onClose}
+            className="text-muted hover:text-content text-xl font-bold w-8 h-8 rounded-full bg-background hover:bg-surface-hover flex items-center justify-center transition-all border border-border"
+          >
+            ✕
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700">Room Name</label>
-              <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5" placeholder="Deluxe Ocean Suite" />
+              <label className="block text-sm font-bold text-content mb-1.5">Room Name</label>
+              <input 
+                type="text" 
+                required 
+                value={formData.name} 
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium" 
+                placeholder="e.g., Deluxe Ocean Suite" 
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700">Room Number</label>
-              <input type="text" required value={formData.room_number} onChange={(e) => setFormData({ ...formData, room_number: e.target.value })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5" />
+              <label className="block text-sm font-bold text-content mb-1.5">Room Number</label>
+              <input 
+                type="text" 
+                required 
+                value={formData.room_number} 
+                onChange={(e) => setFormData({ ...formData, room_number: e.target.value })} 
+                className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium" 
+                placeholder="e.g., 101" 
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700">Category</label>
-              <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5">
-                <option value="AC">AC Room</option>
-                <option value="Non-AC">Non-AC Room</option>
+              <label className="block text-sm font-bold text-content mb-1.5">Category</label>
+              <select 
+                value={formData.type} 
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })} 
+                className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium cursor-pointer"
+              >
+                <option value="AC" className="bg-surface text-content">❄️ AC Room</option>
+                <option value="Non-AC" className="bg-surface text-content">🍃 Non-AC Room</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700">Price Per Night (₹)</label>
-              <input type="number" required value={formData.price_per_night} onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5" />
+              <label className="block text-sm font-bold text-content mb-1.5">Price Per Night (₹)</label>
+              <input 
+                type="number" 
+                required 
+                value={formData.price_per_night} 
+                onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })} 
+                className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium" 
+                placeholder="e.g., 2500" 
+              />
             </div>
           </div>
 
-          {/* Picture Uploads */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+          {/* Picture Upload Sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/80">
             {/* Room Images */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <label className="block text-sm font-bold text-gray-800 mb-2">Main Room Pictures</label>
-              <input type="file" multiple accept="image/*" onChange={(e) => handleImageUpload(e, 'room_images')} disabled={uploading} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-              <div className="flex flex-wrap gap-2 mt-3">
+            <div className="bg-background/60 p-4 rounded-xl border border-border">
+              <label className="block text-sm font-bold text-content mb-2 flex items-center gap-1.5">
+                <span>🛏️</span> Main Room Pictures
+              </label>
+              <input 
+                type="file" 
+                multiple 
+                accept="image/*" 
+                onChange={(e) => handleImageUpload(e, 'room_images')} 
+                disabled={uploading} 
+                className="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:transition-all cursor-pointer" 
+              />
+              <div className="flex flex-wrap gap-2 mt-3.5">
                 {formData.room_images.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Room" className="h-16 w-16 object-cover rounded shadow-sm" />
-                    <button type="button" onClick={() => removeImage(url, 'room_images')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                    <img src={url} alt="Room" className="h-16 w-16 object-cover rounded-lg border border-border shadow-sm" />
+                    <button 
+                      type="button" 
+                      onClick={() => removeImage(url, 'room_images')} 
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Bathroom Images */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <label className="block text-sm font-bold text-gray-800 mb-2">Bathroom Pictures</label>
-              <input type="file" multiple accept="image/*" onChange={(e) => handleImageUpload(e, 'bathroom_images')} disabled={uploading} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-              <div className="flex flex-wrap gap-2 mt-3">
+            <div className="bg-background/60 p-4 rounded-xl border border-border">
+              <label className="block text-sm font-bold text-content mb-2 flex items-center gap-1.5">
+                <span>🚿</span> Bathroom Pictures
+              </label>
+              <input 
+                type="file" 
+                multiple 
+                accept="image/*" 
+                onChange={(e) => handleImageUpload(e, 'bathroom_images')} 
+                disabled={uploading} 
+                className="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:transition-all cursor-pointer" 
+              />
+              <div className="flex flex-wrap gap-2 mt-3.5">
                 {formData.bathroom_images.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Bathroom" className="h-16 w-16 object-cover rounded shadow-sm" />
-                    <button type="button" onClick={() => removeImage(url, 'bathroom_images')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                    <img src={url} alt="Bathroom" className="h-16 w-16 object-cover rounded-lg border border-border shadow-sm" />
+                    <button 
+                      type="button" 
+                      onClick={() => removeImage(url, 'bathroom_images')} 
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* Amenities Input */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Amenities (comma separated)</label>
-            <input type="text" value={formData.amenities} onChange={(e) => setFormData({ ...formData, amenities: e.target.value })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5" placeholder="Wi-Fi, TV, Geyser, Balcony" />
+            <label className="block text-sm font-bold text-content mb-1.5">Amenities (comma separated)</label>
+            <input 
+              type="text" 
+              value={formData.amenities} 
+              onChange={(e) => setFormData({ ...formData, amenities: e.target.value })} 
+              className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium" 
+              placeholder="Wi-Fi, Smart TV, Geyser, Sea View Balcony" 
+            />
           </div>
 
+          {/* Status Dropdown */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Availability Status</label>
-            <select value={formData.is_available} onChange={(e) => setFormData({ ...formData, is_available: e.target.value === 'true' })} className="mt-1 w-full border border-gray-300 rounded-lg p-2.5">
-              <option value="true">Available for Booking</option>
-              <option value="false">Occupied / Under Maintenance</option>
+            <label className="block text-sm font-bold text-content mb-1.5">Availability Status</label>
+            <select 
+              value={formData.is_available} 
+              onChange={(e) => setFormData({ ...formData, is_available: e.target.value === 'true' })} 
+              className="w-full bg-background text-content border border-border rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium cursor-pointer"
+            >
+              <option value="true" className="bg-surface text-content">🟢 Available for Booking</option>
+              <option value="false" className="bg-surface text-content">🔴 Occupied / Under Maintenance</option>
             </select>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
-            <button type="submit" disabled={loading || uploading} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">
-              {loading ? 'Saving...' : uploading ? 'Uploading images...' : 'Save Room'}
+          {/* Action Buttons */}
+          <div className="flex justify-end items-center space-x-3 pt-5 border-t border-border/80">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-6 py-3 border border-border rounded-xl text-content hover:bg-surface-hover font-bold text-sm transition-all active:scale-95 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading || uploading} 
+              className="px-6 py-3 bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center space-x-2"
+            >
+              <span>{loading ? '⏳' : uploading ? '⬆️' : '✨'}</span>
+              <span>{loading ? 'Saving...' : uploading ? 'Uploading Images...' : 'Save Room Details'}</span>
             </button>
           </div>
         </form>

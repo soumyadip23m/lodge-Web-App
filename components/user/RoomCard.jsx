@@ -47,9 +47,8 @@ export default function RoomCard({ room, onSelect }) {
 
   return (
     <>
-      {/* MAIN ROOM CARD (Using Global Semantic Theme Tokens) */}
-      <div className="bg-surface text-content border border-border rounded-xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group/card">
-
+      {/* MAIN ROOM CARD - LUXURY DARK THEME EQUIPPED */}
+      <div className="bg-surface/90 dark:bg-surface/60 text-content border border-border dark:border-slate-800/80 rounded-2xl shadow-lg hover:shadow-2xl dark:hover:shadow-[0_0_25px_rgba(99,102,241,0.15)] hover:border-primary/50 dark:hover:border-primary/40 transition-all duration-500 flex flex-col overflow-hidden group/card animate-fade-in-up backdrop-blur-sm">
         {/* Thumbnail Image Container */}
         <div
           onClick={() => openGallery(0)}
@@ -118,12 +117,12 @@ export default function RoomCard({ room, onSelect }) {
             <button
               onClick={() => onSelect(room)}
               disabled={!room.is_available}
-              className={`px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-all ${room.is_available
-                  ? 'bg-primary hover:bg-primary-hover text-white shadow-primary/20 hover:shadow-primary/30 active:scale-95'
-                  : 'bg-surface-hover text-muted border border-border cursor-not-allowed'
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all duration-300 ${room.is_available
+                  ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white shadow-primary/20 hover:shadow-primary/40 hover:scale-105 active:scale-95'
+                  : 'bg-surface-hover text-muted border border-border/50 cursor-not-allowed opacity-60'
                 }`}
             >
-              {room.is_available ? 'Book Room' : 'Currently Booked'}
+              {room.is_available ? '⚡ Book Room' : 'Currently Booked'}
             </button>
           </div>
         </div>
@@ -202,8 +201,8 @@ export default function RoomCard({ room, onSelect }) {
                   key={idx}
                   onClick={() => setCurrentIndex(idx)}
                   className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden transition-all duration-200 ${currentIndex === idx
-                      ? 'ring-4 ring-primary scale-105 opacity-100 shadow-lg'
-                      : 'opacity-40 hover:opacity-80 ring-1 ring-white/20'
+                    ? 'ring-4 ring-primary scale-105 opacity-100 shadow-lg'
+                    : 'opacity-40 hover:opacity-80 ring-1 ring-white/20'
                     }`}
                 >
                   <img src={img.url} alt="Thumbnail" className="w-full h-full object-cover" />

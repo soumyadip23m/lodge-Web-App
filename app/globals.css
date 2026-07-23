@@ -1,49 +1,80 @@
 @import "tailwindcss";
 
-/* Enable manual dark mode toggling via the '.dark' class on the html tag */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light Theme - Coastal Breeze */
+  /* Light Theme - Luxury Coastal Day */
   --background: #f8fafc;
   --surface: #ffffff;
   --surface-hover: #f1f5f9;
   --primary: #4f46e5;
   --primary-hover: #4338ca;
+  --accent: #06b6d4;
   --content: #0f172a;
-  --muted: #475569;
+  --muted: #64748b;
   --border: #e2e8f0;
+  --glow: rgba(79, 70, 229, 0.15);
 }
 
 .dark {
-  /* Dark Theme - Deep Bay Night */
-  --background: #0b1120;
-  --surface: #1e293b;
-  --surface-hover: #334155;
+  /* Dark Theme - Midnight Obsidian & Bioluminescent Cyan */
+  --background: #060a12;
+  --surface: #0f172a;
+  --surface-hover: #1e293b;
   --primary: #6366f1;
   --primary-hover: #818cf8;
+  --accent: #22d3ee;
   --content: #f8fafc;
   --muted: #94a3b8;
-  --border: #334155;
+  --border: #1e293b;
+  --glow: rgba(99, 102, 241, 0.25);
 }
 
-/* Map CSS variables to Tailwind utility classes */
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
   --color-content: var(--content);
   --color-muted: var(--muted);
   --color-border: var(--border);
 }
 
-/* Base style resets applying the global theme automatically */
+/* Custom Animation Keyframes */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px var(--glow); }
+  50% { box-shadow: 0 0 28px var(--glow), 0 0 10px var(--color-accent); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: float 4s infinite ease-in-out;
+}
+
 @layer base {
   body {
     background-color: var(--background);
     color: var(--content);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+    overflow-x: hidden;
   }
 }
