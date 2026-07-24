@@ -13,36 +13,66 @@ const PRESET_BRANCHES = [
 
 export default function CustomerRoomsPage() {
   const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]); // Stores active bookings for date overlap checks
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Calculate today's local date in YYYY-MM-DD format
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   // Customer Requirement Filter States
   const [selectedBranch, setSelectedBranch] = useState('ALL');
   const [selectedType, setSelectedType] = useState('ALL'); // 'ALL', 'AC', or 'Non-AC'
   const [maxPrice, setMaxPrice] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [checkInDate, setCheckInDate] = useState('');
+  const [checkOutDate, setCheckOutDate] = useState('');
 
-  const fetchRooms = async () => {
+  const fetchRoomsAndBookings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    // 1. Fetch all room inventory
+    const { data: roomsData, error: roomsError } = await supabase
       .from('rooms')
       .select('*')
       .order('price_per_night', { ascending: true });
-    if (!error) setRooms(data || []);
+
+    // 2. Fetch active reservations (confirmed or pending) to check date overlaps
+    const { data: bookingsData, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('room_id, check_in, check_out, status')
+      .in('status', ['confirmed', 'pending']);
+
+    if (!roomsError) setRooms(roomsData || []);
+    if (!bookingsError) setBookings(bookingsData || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchRooms();
+    fetchRoomsAndBookings();
   }, []);
 
-  // Dynamically filter rooms based on customer requirements
+  // Smart hotel availability checker: allows check-in on the exact same day someone checks out!
+  const isRoomAvailableForDates = (roomId, start, end) => {
+    if (!start || !end) return true; // If dates aren't selected yet, show all rooms
+    
+    return !bookings.some((b) => {
+      if (b.room_id !== roomId) return false;
+      // Overlap formula: (existing_start < new_end) AND (existing_end > new_start)
+      // Notice: If existing_end (b.check_out) === new_start (start), b.check_out > start is FALSE!
+      // This allows a new guest to check in on the very same day the previous guest checks out.
+      return b.check_in < end && b.check_out > start;
+    });
+  };
+
+  // Dynamically filter rooms based on customer requirements & date availability
   const filteredRooms = rooms.filter((room) => {
     const matchBranch = selectedBranch === 'ALL' || (room.branch || 'New Bay View (at New Digha)') === selectedBranch;
     const matchType = selectedType === 'ALL' || room.type === selectedType;
     const matchPrice = !maxPrice || room.price_per_night <= parseFloat(maxPrice);
-    const matchAvailability = !onlyAvailable || room.is_available === true;
-    return matchBranch && matchType && matchPrice && matchAvailability;
+    const matchGeneralAvailability = !onlyAvailable || room.is_available === true;
+    const matchDateAvailability = isRoomAvailableForDates(room.id, checkInDate, checkOutDate);
+
+    return matchBranch && matchType && matchPrice && matchGeneralAvailability && matchDateAvailability;
   });
 
   return (
@@ -81,8 +111,8 @@ export default function CustomerRoomsPage() {
             </span>
           </div>
 
+          {/* ROW 1: LOCATION, CATEGORY & BUDGET FILTERS */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
-            {/* 1. Branch Location Selector */}
             <div className="md:col-span-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
                 📍 Select Branch Location
@@ -100,7 +130,6 @@ export default function CustomerRoomsPage() {
               </select>
             </div>
 
-            {/* 2. AC / Non-AC Category */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
                 ❄️ Room Category
@@ -116,7 +145,6 @@ export default function CustomerRoomsPage() {
               </select>
             </div>
 
-            {/* 3. Max Price Budget */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
                 💰 Max Budget (/ Night)
@@ -127,6 +155,40 @@ export default function CustomerRoomsPage() {
                 onChange={(e) => setMaxPrice(e.target.value)}
                 placeholder="e.g., 3000"
                 className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-all placeholder:text-muted/60"
+              />
+            </div>
+          </div>
+
+          {/* ROW 2: LIVE DATE AVAILABILITY CHECKER */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border/60">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+                <span>🗓️</span> Check-in Date
+              </label>
+              <input
+                type="date"
+                min={today}
+                value={checkInDate}
+                onChange={(e) => {
+                  const newIn = e.target.value;
+                  const newOut = checkOutDate && checkOutDate < newIn ? '' : checkOutDate;
+                  setCheckInDate(newIn);
+                  setCheckOutDate(newOut);
+                }}
+                className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer transition-all scheme-light dark:scheme-dark accent-primary"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+                <span>🏁</span> Check-out Date
+              </label>
+              <input
+                type="date"
+                min={checkInDate || today}
+                value={checkOutDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                className="w-full bg-background text-content border border-border hover:border-primary/50 rounded-xl p-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer transition-all scheme-light dark:scheme-dark accent-primary"
               />
             </div>
           </div>
@@ -143,7 +205,7 @@ export default function CustomerRoomsPage() {
               <span>🟢 Show Available Rooms Only (Hide Booked)</span>
             </label>
 
-            {(selectedBranch !== 'ALL' || selectedType !== 'ALL' || maxPrice !== '' || onlyAvailable) && (
+            {(selectedBranch !== 'ALL' || selectedType !== 'ALL' || maxPrice !== '' || onlyAvailable || checkInDate || checkOutDate) && (
               <button
                 type="button"
                 onClick={() => {
@@ -151,6 +213,8 @@ export default function CustomerRoomsPage() {
                   setSelectedType('ALL');
                   setMaxPrice('');
                   setOnlyAvailable(false);
+                  setCheckInDate('');
+                  setCheckOutDate('');
                 }}
                 className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-all cursor-pointer active:scale-95 flex items-center gap-1"
               >
@@ -210,8 +274,10 @@ export default function CustomerRoomsPage() {
         {selectedRoom && (
           <BookingModal
             room={selectedRoom}
+            initialCheckIn={checkInDate}
+            initialCheckOut={checkOutDate}
             onClose={() => setSelectedRoom(null)}
-            onSuccess={fetchRooms}
+            onSuccess={fetchRoomsAndBookings}
           />
         )}
       </div>

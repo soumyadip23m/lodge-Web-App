@@ -44,13 +44,13 @@ const validateIdFormat = (idType, idNumber) => {
   }
 };
 
-export default function BookingModal({ room, onClose, onSuccess }) {
+export default function BookingModal({ room, initialCheckIn = '', initialCheckOut = '', onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: '',
     customer_phone: '',
-    check_in: '',
-    check_out: '',
+    check_in: initialCheckIn,
+    check_out: initialCheckOut,
     members: [
       { name: '', age: '', id_type: 'Aadhaar Card', id_number: '', id_image_url: '' }
     ],
