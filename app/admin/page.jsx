@@ -28,8 +28,26 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const ALLOWED_ADMIN_EMAILS = ['admin@bayview.com', 'owner@dighalodge.com'];
+
   useEffect(() => {
-    fetchRooms();
+    const verifyAdminAccess = async () => {
+      setLoading(true);
+      // Get the currently logged-in user session
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      // If not logged in OR email is not in the allowed admin list
+      if (!user || !ALLOWED_ADMIN_EMAILS.includes(user.email)) {
+        alert('🔒 Unauthorized: You must be logged in with a staff account to view the Admin Dashboard.');
+        window.location.href = '/login'; // Force redirect to login page
+        return;
+      }
+
+      // If authorized, load the room inventory
+      fetchRooms();
+    };
+
+    verifyAdminAccess();
   }, []);
 
   // Filter rooms dynamically based on selected branch location
@@ -52,7 +70,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-content py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-500">
       <div className="max-w-7xl mx-auto animate-fade-in-up">
-        
+
         {/* Executive Dashboard Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-6 pb-6 border-b border-border/80 dark:border-slate-800">
           <div>
@@ -67,7 +85,7 @@ export default function AdminDashboard() {
               Select a branch location below to manage its inventory, pricing, and availability.
             </p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
             <Link
               href="/admin/bookings"
@@ -105,11 +123,10 @@ export default function AdminDashboard() {
                 <button
                   key={branch}
                   onClick={() => setSelectedBranch(branch)}
-                  className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer flex items-center gap-1.5 border ${
-                    isSelected
+                  className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer flex items-center gap-1.5 border ${isSelected
                       ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent text-white border-transparent shadow-lg shadow-primary/25 scale-102'
                       : 'bg-background hover:bg-surface-hover text-muted hover:text-content border-border'
-                  }`}
+                    }`}
                 >
                   <span>{branch === 'ALL' ? '🌐' : '🏢'}</span>
                   <span>{branch === 'ALL' ? 'All Branches' : branch}</span>
@@ -146,33 +163,31 @@ export default function AdminDashboard() {
           /* Stretched Grid Container for Equal Card Heights */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
             {filteredRooms.map((room, idx) => (
-              <div 
-                key={room.id} 
+              <div
+                key={room.id}
                 style={{ animationDelay: `${idx * 100}ms` }}
                 className="bg-surface/90 dark:bg-surface/60 rounded-2xl shadow-md hover:shadow-2xl dark:hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] border border-border dark:border-slate-800/80 hover:border-primary/50 dark:hover:border-primary/40 overflow-hidden flex flex-col h-full transition-all duration-500 group/card animate-fade-in-up backdrop-blur-sm"
               >
                 {/* Fixed Aspect Ratio Image Container */}
                 <div className="relative h-52 w-full shrink-0 overflow-hidden bg-background">
-                  <img 
-                    src={room.room_images?.[0] || 'https://placehold.co/600x400?text=No+Image'} 
-                    alt={room.name} 
-                    className="h-full w-full object-cover group-hover/card:scale-105 transition-transform duration-500 opacity-95 group-hover/card:opacity-100" 
+                  <img
+                    src={room.room_images?.[0] || 'https://placehold.co/600x400?text=No+Image'}
+                    alt={room.name}
+                    className="h-full w-full object-cover group-hover/card:scale-105 transition-transform duration-500 opacity-95 group-hover/card:opacity-100"
                   />
-                  
+
                   {/* Floating Status Badges */}
                   <div className="absolute top-3 right-3 flex gap-1.5 z-10">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm border ${
-                      room.type === 'AC' 
-                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30' 
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm border ${room.type === 'AC'
+                        ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30'
                         : 'bg-orange-500/20 text-orange-600 dark:text-orange-300 border-orange-500/30'
-                    }`}>
+                      }`}>
                       {room.type}
                     </span>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${
-                      room.is_available 
-                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-md border ${room.is_available
+                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                         : 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30'
-                    }`}>
+                      }`}>
                       {room.is_available ? 'Live' : 'Booked'}
                     </span>
                   </div>
@@ -184,7 +199,7 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Body Content Container */}
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
@@ -195,7 +210,7 @@ export default function AdminDashboard() {
                     <span className="inline-block text-[11px] font-bold text-muted bg-background px-2.5 py-0.5 rounded border border-border/80 mt-1">
                       📍 {room.branch || 'New Bay View (at New Digha)'}
                     </span>
-                    
+
                     {/* Wrapped Amenity Pills */}
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {room.amenities?.length > 0 ? (
@@ -216,7 +231,7 @@ export default function AdminDashboard() {
                       <span className="text-2xl font-extrabold text-content">₹{room.price_per_night}</span>
                       <span className="text-xs text-muted"> / night</span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 shrink-0">
                       <button
                         onClick={() => { setSelectedRoom(room); setIsModalOpen(true); }}

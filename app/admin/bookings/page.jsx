@@ -9,9 +9,24 @@ export default function BookingHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
 
+  const ALLOWED_ADMIN_EMAILS = [
+    'admin@bayview.com',
+    'owner@dighalodge.com' // Match this with your list in LoginPage
+  ];
+
   useEffect(() => {
-    const fetchBookings = async () => {
+    const verifyAdminAndFetchBookings = async () => {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // If user is not logged in OR their email is not an authorized staff email
+      if (!user || !ALLOWED_ADMIN_EMAILS.includes(user.email)) {
+        alert('🔒 Unauthorized: Staff privileges required to view booking histories.');
+        window.location.href = '/login';
+        return;
+      }
+
+      // Authorized -> Fetch bookings along with room details
       const { data, error } = await supabase
         .from('bookings')
         .select('*, rooms(name, room_number, type)')
@@ -20,7 +35,7 @@ export default function BookingHistoryPage() {
       if (!error) setBookings(data || []);
       setLoading(false);
     };
-    fetchBookings();
+    verifyAdminAndFetchBookings();
   }, []);
 
   // Filter Bookings (Check-ins / Active Stays)

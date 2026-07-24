@@ -14,6 +14,12 @@ export default function LoginPage() {
   const [infoMsg, setInfoMsg] = useState('');
   const router = useRouter();
 
+  // 1. Define your authorized admin email(s) here:
+  const ALLOWED_ADMIN_EMAILS = [
+    'admin@bayview.com',
+    'owner@dighalodge.com' // Add any other staff emails here
+  ];
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,13 +50,25 @@ export default function LoginPage() {
       return;
     }
 
-    // Successful Login Routing
-    setLoading(false);
-    if (activeTab === 'customer') {
-      router.push('/rooms');
-    } else {
+    // 2. Role Security Check
+    const userEmail = data.user?.email;
+    const isAdminEmail = ALLOWED_ADMIN_EMAILS.includes(userEmail);
+
+    if (activeTab === 'admin') {
+      if (!isAdminEmail) {
+        // Immediately log them out if a normal user tries to access Admin
+        await supabase.auth.signOut();
+        setError('🚫 ACCESS DENIED: This email address does not have Administrator privileges.');
+        setLoading(false);
+        return;
+      }
+      // Authorized Admin -> Send to Dashboard
       router.push('/admin');
+    } else {
+      // 3. Customer Portal -> Both normal users AND admins can access this!
+      router.push('/rooms');
     }
+    setLoading(false);
   };
 
   return (
@@ -59,28 +77,26 @@ export default function LoginPage() {
         <h2 className="text-center text-3xl font-extrabold tracking-tight">
           Guest House Portal
         </h2>
-        
+
         {/* Section Toggle */}
         <div className="mt-6 flex rounded-xl bg-surface p-1.5 border border-border shadow-sm">
           <button
             type="button"
             onClick={() => { setActiveTab('customer'); setError(''); setInfoMsg(''); }}
-            className={`w-1/2 py-2.5 text-sm font-bold rounded-lg transition-all ${
-              activeTab === 'customer'
-                ? 'bg-primary text-white shadow-md'
-                : 'text-muted hover:text-content hover:bg-surface-hover'
-            }`}
+            className={`w-1/2 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'customer'
+              ? 'bg-primary text-white shadow-md'
+              : 'text-muted hover:text-content hover:bg-surface-hover'
+              }`}
           >
             Customer Login
           </button>
           <button
             type="button"
             onClick={() => { setActiveTab('admin'); setError(''); setInfoMsg(''); }}
-            className={`w-1/2 py-2.5 text-sm font-bold rounded-lg transition-all ${
-              activeTab === 'admin'
-                ? 'bg-primary text-white shadow-md'
-                : 'text-muted hover:text-content hover:bg-surface-hover'
-            }`}
+            className={`w-1/2 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'admin'
+              ? 'bg-primary text-white shadow-md'
+              : 'text-muted hover:text-content hover:bg-surface-hover'
+              }`}
           >
             Admin Portal
           </button>
@@ -94,8 +110,8 @@ export default function LoginPage() {
               {activeTab === 'customer' ? 'Welcome Back, Guest' : 'Administrator Control Panel'}
             </h3>
             <p className="text-xs text-muted mt-1">
-              {activeTab === 'customer' 
-                ? 'Enter your credentials to book rooms and manage stays.' 
+              {activeTab === 'customer'
+                ? 'Enter your credentials to book rooms and manage stays.'
                 : 'Restricted access for authorized staff only.'}
             </p>
           </div>
@@ -111,6 +127,32 @@ export default function LoginPage() {
               {infoMsg}
             </div>
           )}
+
+          {/* ROLE SELECTION TABS */}
+          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-background/60 border border-border rounded-xl">
+            <button
+              type="button"
+              onClick={() => { setActiveTab('customer'); setError(''); setInfoMsg(''); }}
+              className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'customer'
+                  ? 'bg-primary text-white shadow-md'
+                  : 'text-muted hover:text-content'
+              }`}
+            >
+              <span>🏨</span> Customer Login
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab('admin'); setError(''); setInfoMsg(''); }}
+              className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'admin'
+                  ? 'bg-gradient-to-r from-red-600 to-accent text-white shadow-md'
+                  : 'text-muted hover:text-content'
+              }`}
+            >
+              <span>🔐</span> Admin Portal
+            </button>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -161,3 +203,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
