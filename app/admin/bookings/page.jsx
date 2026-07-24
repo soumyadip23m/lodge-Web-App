@@ -8,6 +8,7 @@ export default function BookingHistoryPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const ALLOWED_ADMIN_EMAILS = [
     'admin@bayview.com',
@@ -38,21 +39,30 @@ export default function BookingHistoryPage() {
     verifyAdminAndFetchBookings();
   }, []);
 
+  // Helper function to match Customer Name or Phone Number
+  const matchesSearch = (b) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const nameMatch = b.customer_name?.toLowerCase().includes(query);
+    const phoneMatch = b.customer_phone?.toString().includes(query);
+    return nameMatch || phoneMatch;
+  };
+
   // Filter Bookings (Check-ins / Active Stays)
   const bookingsList = bookings.filter((b) => {
     const isNotCheckedOut = b.status !== 'checked_out';
-    if (!selectedDate) return isNotCheckedOut;
-    return isNotCheckedOut && b.check_in === selectedDate;
+    const matchesDate = !selectedDate || b.check_in === selectedDate;
+    return isNotCheckedOut && matchesDate && matchesSearch(b);
   });
 
   // Filter Checkouts (Departed / Completed Stays)
   const checkoutsList = bookings.filter((b) => {
     const isCheckedOut = b.status === 'checked_out';
-    if (!selectedDate) return isCheckedOut;
-    return (
+    const matchesDate = !selectedDate || (
       (isCheckedOut || b.check_out === selectedDate) &&
       (b.check_out === selectedDate || b.actual_checkout_time?.startsWith(selectedDate))
     );
+    return isCheckedOut && matchesDate && matchesSearch(b);
   });
 
   // Export ONLY currently viewed/searched results with EXACT unaltered ID, Phone & individual Member data
@@ -141,43 +151,83 @@ export default function BookingHistoryPage() {
           </Link>
         </div>
 
-        {/* Date Filter Search Bar */}
-        <div className="bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl p-4 sm:p-5 mb-10 shadow-md backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl">🗓️</span>
-            <div>
-              <h3 className="text-base font-extrabold text-content">Filter by Date</h3>
-              <p className="text-xs text-muted">Search exact check-ins and checkouts for a specific day</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-background text-content border border-border rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer scheme-light dark:scheme-dark accent-primary w-full sm:w-auto"
-            />
+        {/* COMBINED SEARCH & DATE FILTER DASHBOARD */}
+        <div className="bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl p-4 sm:p-5 mb-10 shadow-md backdrop-blur-md space-y-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             
-            {selectedDate && (
+            {/* Search Input Bar (Name or Phone) */}
+            <div className="relative flex-1">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted text-base">
+                🔍
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by Guest Name or Phone Number..."
+                className="w-full pl-10 pr-10 py-2.5 bg-background text-content border border-border rounded-xl text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-all placeholder:text-muted/60"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-bold text-muted hover:text-content cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Date Picker & Action Buttons */}
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 justify-end">
+              <div className="relative w-full sm:w-auto">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full sm:w-auto bg-background text-content border border-border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer scheme-light dark:scheme-dark accent-primary"
+                />
+              </div>
+
+              {(selectedDate || searchQuery) && (
+                <button
+                  type="button"
+                  onClick={() => { setSelectedDate(''); setSearchQuery(''); }}
+                  className="px-3.5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold border border-red-500/20 transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+                >
+                  <span>✕</span>
+                  <span>Clear All</span>
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setSelectedDate('')}
-                className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-xs font-bold border border-red-500/20 transition-all cursor-pointer shrink-0 active:scale-95"
+                onClick={exportFilteredToExcel}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-emerald-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 active:scale-95 w-full sm:w-auto"
               >
-                Clear
+                <span>📊</span>
+                <span>Export {selectedDate || searchQuery ? 'Filtered' : 'All'} to Excel</span>
               </button>
-            )}
+            </div>
 
-            <button
-              type="button"
-              onClick={exportFilteredToExcel}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95 w-full sm:w-auto justify-center"
-            >
-              <span>📊</span>
-              <span>Export {selectedDate ? 'Searched' : 'All'} to Excel</span>
-            </button>
           </div>
+
+          {/* Active Filter Indicators */}
+          {(searchQuery || selectedDate) && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs text-muted font-medium">
+              <span>Active Filters:</span>
+              {searchQuery && (
+                <span className="bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                  <span>👤 Name/Phone: &quot;{searchQuery}&quot;</span>
+                </span>
+              )}
+              {selectedDate && (
+                <span className="bg-accent/10 text-accent border border-accent/20 px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                  <span>🗓️ Date: {selectedDate}</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content Area */}
