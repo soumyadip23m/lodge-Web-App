@@ -146,7 +146,7 @@ export default function LoginPage() {
               onClick={() => { setActiveTab('admin'); setError(''); setInfoMsg(''); }}
               className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'admin'
-                  ? 'bg-gradient-to-r from-red-600 to-accent text-white shadow-md'
+                  ? 'bg-linear-to-r from-red-600 to-accent text-white shadow-md'
                   : 'text-muted hover:text-content'
               }`}
             >

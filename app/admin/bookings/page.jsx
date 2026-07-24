@@ -124,7 +124,7 @@ export default function BookingHistoryPage() {
               <span className="h-2 w-2 rounded-full bg-accent animate-ping"></span>
               <span className="text-xs font-bold uppercase tracking-widest text-accent">Staff Portal</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 bg-gradient-to-r from-content via-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 bg-linear-to-r from-content via-primary to-accent bg-clip-text text-transparent">
               Room Booking History
             </h1>
             <p className="text-muted text-sm sm:text-base mt-1.5">
@@ -156,7 +156,7 @@ export default function BookingHistoryPage() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-background text-content border border-border rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary w-full sm:w-auto"
+              className="bg-background text-content border border-border rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer scheme-light dark:scheme-dark accent-primary w-full sm:w-auto"
             />
             
             {selectedDate && (
@@ -249,7 +249,7 @@ export default function BookingHistoryPage() {
                               <td className="p-4 text-right whitespace-nowrap">
                                 <Link
                                   href={`/admin/bookings/${booking.id}`}
-                                  className="px-4 py-2 bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow hover:shadow-primary/30 transition-all inline-flex items-center gap-1 cursor-pointer active:scale-95"
+                                  className="px-4 py-2 bg-linear-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow hover:shadow-primary/30 transition-all inline-flex items-center gap-1 cursor-pointer active:scale-95"
                                 >
                                   <span>👁️</span>
                                   <span>Details</span>

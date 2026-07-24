@@ -337,7 +337,7 @@ export default function BookingDetailsPage() {
                                     required
                                     value={actualCheckout}
                                     onChange={(e) => setActualCheckout(e.target.value)}
-                                    className="w-full bg-background text-content border border-border rounded-xl p-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer [color-scheme:light] dark:[color-scheme:dark] accent-primary"
+                                    className="w-full bg-background text-content border border-border rounded-xl p-3 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer scheme-light dark:scheme-dark accent-primary"
                                 />
                             </div>
 
@@ -356,7 +356,7 @@ export default function BookingDetailsPage() {
                                 <button
                                     type="submit"
                                     disabled={updating}
-                                    className="px-5 py-2 bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-primary/30 transition-all cursor-pointer disabled:opacity-50"
+                                    className="px-5 py-2 bg-linear-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-primary/30 transition-all cursor-pointer disabled:opacity-50"
                                 >
                                     {updating ? 'Saving...' : 'Confirm Checkout'}
                                 </button>

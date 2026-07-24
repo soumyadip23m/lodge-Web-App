@@ -14,7 +14,7 @@ export default function HomePage() {
                     </span>
                 </div>
                 
-                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mt-6 mb-6 bg-gradient-to-r from-content via-primary to-accent bg-clip-text text-transparent">
+                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mt-6 mb-6 bg-linear-to-r from-content via-primary to-accent bg-clip-text text-transparent">
                     Bay View Guest House
                 </h1>
                 
@@ -25,7 +25,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row justify-center gap-5">
                     <Link
                         href="/rooms"
-                        className="px-8 py-4 bg-gradient-to-r from-primary to-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 animate-pulse-glow"
+                        className="px-8 py-4 bg-linear-to-r from-primary to-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 animate-pulse-glow"
                     >
                         Explore Available Rooms
                     </Link>

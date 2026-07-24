@@ -78,7 +78,7 @@ export default function AdminDashboard() {
               <span className="h-2 w-2 rounded-full bg-accent animate-ping"></span>
               <span className="text-xs font-bold uppercase tracking-widest text-accent">Staff Portal</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 bg-gradient-to-r from-content via-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 bg-linear-to-r from-content via-primary to-accent bg-clip-text text-transparent">
               Admin Room Management
             </h1>
             <p className="text-muted text-sm sm:text-base mt-1.5">
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
 
             <button
               onClick={() => { setSelectedRoom(null); setIsModalOpen(true); }}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow cursor-pointer"
+              className="w-full sm:w-auto bg-linear-to-r from-primary to-accent hover:from-primary-hover hover:to-cyan-400 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow cursor-pointer"
             >
               <span>✨</span>
               <span>+ Add New Room</span>
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                   key={branch}
                   onClick={() => setSelectedBranch(branch)}
                   className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer flex items-center gap-1.5 border ${isSelected
-                      ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent text-white border-transparent shadow-lg shadow-primary/25 scale-102'
+                      ? 'bg-linear-to-r from-primary via-indigo-600 to-accent text-white border-transparent shadow-lg shadow-primary/25 scale-102'
                       : 'bg-background hover:bg-surface-hover text-muted hover:text-content border-border'
                     }`}
                 >

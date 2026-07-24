@@ -61,7 +61,7 @@ export default function CustomerRoomsPage() {
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mt-4 mb-4 bg-gradient-to-r from-content via-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mt-4 mb-4 bg-linear-to-r from-content via-primary to-accent bg-clip-text text-transparent">
             Available Guest House Rooms
           </h1>
           <p className="text-lg sm:text-xl text-muted leading-relaxed">
