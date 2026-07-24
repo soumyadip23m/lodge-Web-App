@@ -3,6 +3,47 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
+// Strict validation regex rules for contact and ID formats
+const VALIDATION_RULES = {
+  phone: /^[6-9]\d{9}$/, // Exactly 10 digits starting with 6, 7, 8, or 9
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  aadhaar: /^\d{12}$/, // Exactly 12 numeric digits
+  pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, // Exactly 10 characters: 5 letters, 4 digits, 1 letter
+  voter_id: /^[A-Z]{3}\d{7}$/, // Typical 10-character alphanumeric Voter ID
+  passport: /^[A-Z]{1}[0-9]{7}$/ // Standard 8-character Indian Passport
+};
+
+// Helper to validate individual member ID numbers based on selected document type
+const validateIdFormat = (idType, idNumber) => {
+  const cleanId = idNumber.trim().toUpperCase();
+  if (!cleanId) return { valid: false, msg: 'ID number cannot be empty.' };
+
+  switch (idType) {
+    case 'Aadhaar Card':
+      return VALIDATION_RULES.aadhaar.test(cleanId)
+        ? { valid: true }
+        : { valid: false, msg: 'Aadhaar Card must be exactly 12 numeric digits.' };
+    case 'PAN Card':
+      return VALIDATION_RULES.pan.test(cleanId)
+        ? { valid: true }
+        : { valid: false, msg: 'PAN Card must be 10 characters (e.g., ABCDE1234F).' };
+    case 'Voter ID':
+      return cleanId.length >= 10 && cleanId.length <= 12
+        ? { valid: true }
+        : { valid: false, msg: 'Voter ID must be between 10 and 12 alphanumeric characters.' };
+    case 'Driving License':
+      return cleanId.length >= 15 && cleanId.length <= 16
+        ? { valid: true }
+        : { valid: false, msg: 'Driving License must be 15 or 16 alphanumeric characters.' };
+    case 'Passport':
+      return cleanId.length >= 8 && cleanId.length <= 9
+        ? { valid: true }
+        : { valid: false, msg: 'Passport number must be 8 or 9 alphanumeric characters.' };
+    default:
+      return cleanId.length >= 4 ? { valid: true } : { valid: false, msg: 'Invalid ID format.' };
+  }
+};
+
 export default function BookingModal({ room, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     customer_name: '',
@@ -20,12 +61,41 @@ export default function BookingModal({ room, onClose, onSuccess }) {
   // Calculate today's local date in YYYY-MM-DD format to block past date selections
   const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
+  // Handle Primary Phone Input with strict numeric 10-digit restriction
+  const handlePhoneChange = (e) => {
+    const onlyDigits = e.target.value.replace(/\D/g, '');
+    if (onlyDigits.length <= 10) {
+      setFormData((prev) => ({ ...prev, customer_phone: onlyDigits }));
+    }
+  };
+
+  // Handle Member inputs with smart typing sanitization and auto-sync
   const handleMemberChange = (index, field, value) => {
     const updatedMembers = [...formData.members];
-    updatedMembers[index][field] = value;
+    let sanitizedValue = value;
+
+    if (field === 'age') {
+      // Allow only digits up to 3 characters (max age 120)
+      sanitizedValue = value.replace(/\D/g, '').slice(0, 3);
+    } else if (field === 'id_number') {
+      const idType = updatedMembers[index].id_type;
+      if (idType === 'Aadhaar Card') {
+        // Restrict Aadhaar to numbers only, max 12 digits
+        sanitizedValue = value.replace(/\D/g, '').slice(0, 12);
+      } else if (idType === 'PAN Card') {
+        // Auto-convert PAN to uppercase, alphanumeric only, max 10 chars
+        sanitizedValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+      } else {
+        // General alphanumeric cleanup for other IDs, uppercase, max 16 chars
+        sanitizedValue = value.replace(/[^a-zA-Z0-9-/]/g, '').toUpperCase().slice(0, 16);
+      }
+    }
+
+    updatedMembers[index][field] = sanitizedValue;
+
     // Automatically sync primary customer name with Member 1
     if (index === 0 && field === 'name') {
-      setFormData((prev) => ({ ...prev, customer_name: value, members: updatedMembers }));
+      setFormData((prev) => ({ ...prev, customer_name: sanitizedValue, members: updatedMembers }));
     } else {
       setFormData((prev) => ({ ...prev, members: updatedMembers }));
     }
@@ -85,17 +155,48 @@ export default function BookingModal({ room, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Strict safety check to prevent past check-in dates
+    // 1. Date Validation
     if (formData.check_in < today) {
       alert('⚠️ Check-in date cannot be in the past! Please select today or a future date.');
       return;
     }
 
-    // Strict safety check for mandatory member fields including Age
+    // 2. Primary Phone Number Validation (Must be exactly 10 digits starting with 6-9)
+    if (!VALIDATION_RULES.phone.test(formData.customer_phone)) {
+      alert('⚠️ Please enter a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9).');
+      return;
+    }
+
+    // 3. Email Validation (if provided)
+    if (formData.customer_email && !VALIDATION_RULES.email.test(formData.customer_email)) {
+      alert('⚠️ Please enter a valid email address.');
+      return;
+    }
+
+    // 4. Strict Member Field & ID Format Validation
     for (let i = 0; i < formData.members.length; i++) {
       const m = formData.members[i];
-      if (!m.name.trim() || !String(m.age).trim() || Number(m.age) <= 0 || !m.id_number.trim() || !m.id_image_url) {
-        alert(`⚠️ Please complete all mandatory fields (Name, Age, ID Number, and ID Photo) for Member #${i + 1}.`);
+      
+      if (!m.name.trim()) {
+        alert(`⚠️ Please enter the full legal name for Member #${i + 1}.`);
+        return;
+      }
+
+      const ageNum = Number(m.age);
+      if (!m.age || isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+        alert(`⚠️ Please enter a valid age (between 1 and 120) for Member #${i + 1} (${m.name || 'Unnamed'}).`);
+        return;
+      }
+
+      if (!m.id_image_url) {
+        alert(`⚠️ Please upload an ID card photo for Member #${i + 1} (${m.name}).`);
+        return;
+      }
+
+      // Execute dynamic regex check against the selected ID document type
+      const idCheck = validateIdFormat(m.id_type, m.id_number);
+      if (!idCheck.valid) {
+        alert(`⚠️ Member #${i + 1} (${m.name}): ${idCheck.msg}`);
         return;
       }
     }
@@ -168,10 +269,11 @@ export default function BookingModal({ room, onClose, onSuccess }) {
               <input
                 type="tel"
                 required
+                maxLength="10"
                 value={formData.customer_phone}
-                onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm"
-                placeholder="+91 98765 43210"
+                onChange={handlePhoneChange}
+                className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm tracking-wide"
+                placeholder="10-digit mobile number"
               />
             </div>
             <div>
@@ -251,14 +353,18 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                     <label className="block text-[11px] font-bold text-muted mb-1">ID Document Type <span className="text-red-500">*</span></label>
                     <select
                       value={member.id_type}
-                      onChange={(e) => handleMemberChange(index, 'id_type', e.target.value)}
+                      onChange={(e) => {
+                        handleMemberChange(index, 'id_type', e.target.value);
+                        // Reset ID number when document type changes to avoid regex mismatches
+                        handleMemberChange(index, 'id_number', '');
+                      }}
                       className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium cursor-pointer shadow-sm"
                     >
-                      <option value="Aadhaar Card" className="bg-surface text-content">Aadhaar Card</option>
+                      <option value="Aadhaar Card" className="bg-surface text-content">Aadhaar Card (12 Digits)</option>
+                      <option value="PAN Card" className="bg-surface text-content">PAN Card (10 Chars)</option>
                       <option value="Voter ID" className="bg-surface text-content">Voter ID</option>
                       <option value="Driving License" className="bg-surface text-content">Driving License</option>
                       <option value="Passport" className="bg-surface text-content">Passport</option>
-                      <option value="PAN Card" className="bg-surface text-content">PAN Card</option>
                     </select>
                   </div>
                   <div>
@@ -266,10 +372,18 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                     <input
                       type="text"
                       required
+                      maxLength={
+                        member.id_type === 'Aadhaar Card' ? 12 :
+                        member.id_type === 'PAN Card' ? 10 : 16
+                      }
                       value={member.id_number}
                       onChange={(e) => handleMemberChange(index, 'id_number', e.target.value)}
-                      className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium shadow-sm"
-                      placeholder="Enter ID number"
+                      className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-mono font-bold uppercase shadow-sm tracking-wider"
+                      placeholder={
+                        member.id_type === 'Aadhaar Card' ? '12-digit numeric number' :
+                        member.id_type === 'PAN Card' ? 'e.g., ABCDE1234F' :
+                        'Enter alphanumeric ID'
+                      }
                     />
                   </div>
                 </div>
