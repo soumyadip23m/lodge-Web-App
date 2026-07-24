@@ -174,7 +174,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* BRANCH LOCATION DROPDOWN */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-content mb-1.5 flex items-center gap-1">
+              <label className="text-sm font-bold text-content mb-1.5 flex items-center gap-1">
                 <span>📍</span> Assign Branch Location <span className="text-red-500">*</span>
               </label>
               <select 
@@ -257,7 +257,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/80">
             {/* Room Images */}
             <div className="bg-background/60 p-4 rounded-xl border border-border">
-              <label className="block text-sm font-bold text-content mb-2 flex items-center gap-1.5">
+              <label className="text-sm font-bold text-content mb-2 flex items-center gap-1.5">
                 <span>🛏️</span> Main Room Pictures
               </label>
               <input 
@@ -286,7 +286,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
 
             {/* Bathroom Images */}
             <div className="bg-background/60 p-4 rounded-xl border border-border">
-              <label className="block text-sm font-bold text-content mb-2 flex items-center gap-1.5">
+              <label className="text-sm font-bold text-content mb-2 flex items-center gap-1.5">
                 <span>🚿</span> Bathroom Pictures
               </label>
               <input 
@@ -317,7 +317,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
           {/* INTERACTIVE AMENITIES MULTI-SELECT PILLS */}
           <div className="pt-2 border-t border-border/80">
             <div className="flex justify-between items-center mb-2.5">
-              <label className="block text-sm font-bold text-content flex items-center gap-1.5">
+              <label className="text-sm font-bold text-content flex items-center gap-1.5">
                 <span>✨</span> Room Amenities <span className="text-xs font-normal text-muted">(Click to select/deselect)</span>
               </label>
               <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
@@ -336,7 +336,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
                     onClick={() => toggleAmenity(item)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 cursor-pointer border ${
                       isSelected
-                        ? 'bg-gradient-to-r from-primary to-accent text-white border-transparent shadow-md shadow-primary/20 scale-102'
+                        ? 'bg-linear-to-r from-primary to-accent text-white border-transparent shadow-md shadow-primary/20 scale-102'
                         : 'bg-background hover:bg-surface-hover text-muted hover:text-content border-border'
                     }`}
                   >
@@ -397,7 +397,7 @@ export default function RoomEditorModal({ room, currentBranch, onClose, onSave }
             <button 
               type="submit" 
               disabled={loading || uploading} 
-              className="px-6 py-3 bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center space-x-2"
+              className="px-6 py-3 bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center space-x-2"
             >
               <span>{loading ? '⏳' : uploading ? '⬆️' : '✨'}</span>
               <span>{loading ? 'Saving...' : uploading ? 'Uploading Images...' : 'Save Room Details'}</span>

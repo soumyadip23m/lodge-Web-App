@@ -299,7 +299,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
           {/* BUTTON-STYLE DATE PICKER FIELDS WITH PAST DATE RESTRICTION */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
                 <span>🗓️</span> Check-in Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -313,11 +313,11 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                   const newCheckOut = formData.check_out && formData.check_out < newCheckIn ? '' : formData.check_out;
                   setFormData({ ...formData, check_in: newCheckIn, check_out: newCheckOut });
                 }}
-                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
+                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary scheme-light dark:scheme-dark accent-primary"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
                 <span>🏁</span> Check-out Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -326,7 +326,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
                 min={formData.check_in || today} // Prevents selecting a check-out date before check-in or present date
                 value={formData.check_out}
                 onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
-                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary [color-scheme:light] dark:[color-scheme:dark] accent-primary"
+                className="w-full bg-surface-hover hover:bg-primary/15 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-content border border-border hover:border-primary/60 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold shadow-sm hover:shadow active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary scheme-light dark:scheme-dark accent-primary"
               />
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
           {/* Price Calculation Summary */}
           <div className="bg-background/80 p-3.5 rounded-xl flex justify-between items-center border border-border mt-6">
             <span className="text-sm font-bold text-muted">Estimated Total:</span>
-            <span className="text-2xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-2xl font-extrabold bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
               ₹{calculateTotal()}
             </span>
           </div>
@@ -349,7 +349,7 @@ export default function BookingModal({ room, onClose, onSuccess }) {
               formData.check_in < today ||
               formData.members.some((m) => !m.id_image_url || !m.name.trim() || !m.id_number.trim() || !String(m.age).trim() || Number(m.age) <= 0)
             }
-            className="w-full mt-4 bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex justify-center items-center space-x-2"
+            className="w-full mt-4 bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex justify-center items-center space-x-2"
           >
             <span>{loading ? '⏳' : uploadingIndex !== null ? '⬆️' : '⚡'}</span>
             <span>{loading ? 'Confirming Reservation...' : uploadingIndex !== null ? 'Uploading Member ID...' : `Confirm Reservation (${formData.members.length} ${formData.members.length === 1 ? 'Guest' : 'Guests'})`}</span>

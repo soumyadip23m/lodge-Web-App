@@ -118,7 +118,7 @@ export default function RoomCard({ room, onSelect }) {
               onClick={() => onSelect(room)}
               disabled={!room.is_available}
               className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all duration-300 ${room.is_available
-                  ? 'bg-gradient-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white shadow-primary/20 hover:shadow-primary/40 hover:scale-105 active:scale-95'
+                  ? 'bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white shadow-primary/20 hover:shadow-primary/40 hover:scale-105 active:scale-95'
                   : 'bg-surface-hover text-muted border border-border/50 cursor-not-allowed opacity-60'
                 }`}
             >
@@ -200,7 +200,7 @@ export default function RoomCard({ room, onSelect }) {
                 <button
                   key={idx}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`relative flex-shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden transition-all duration-200 ${currentIndex === idx
+                  className={`relative shrink-0 w-16 h-12 sm:w-20 sm:h-14 rounded-md overflow-hidden transition-all duration-200 ${currentIndex === idx
                     ? 'ring-4 ring-primary scale-105 opacity-100 shadow-lg'
                     : 'opacity-40 hover:opacity-80 ring-1 ring-white/20'
                     }`}
