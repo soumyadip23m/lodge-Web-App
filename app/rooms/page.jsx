@@ -82,24 +82,23 @@ export default function CustomerRoomsPage() {
   };
 
   useEffect(() => {
-    const verifyAuthAndFetch = async () => {
-      setLoading(true);
-      
-      // 1. Check if user is signed in
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        alert('🔒 Please sign in first to view and book rooms.');
-        router.push('/login');
-        return;
-      }
+    // Let everyone (even logged-out users) see the rooms catalog
+    fetchRoomsAndBookings();
+  }, []);
 
-      // 2. User is authenticated -> load catalog and bookings
-      fetchRoomsAndBookings();
-    };
-
-    verifyAuthAndFetch();
-  }, [router]);
+  // NEW: Intercept the booking button click to enforce login
+  const handleBookClick = async (roomData) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      alert('🔒 Please sign in or create an account to reserve a room.');
+      router.push(`/login`);
+      return;
+    }
+    
+    // If logged in, open the booking modal normally
+    setSelectedRoom(roomData);
+  };
 
   // Smart hotel availability checker: allows check-in on the exact same day someone checks out!
   const isRoomAvailableForDates = (roomId, start, end) => {
@@ -339,7 +338,7 @@ export default function CustomerRoomsPage() {
               >
                 <RoomCard
                   room={room}
-                  onSelect={(roomData) => setSelectedRoom(roomData)}
+                  onSelect={handleBookClick} // This now triggers the login check before booking
                   onReviewSelect={(roomData) => setSelectedRoomForReview(roomData)}
                 />
               </div>
