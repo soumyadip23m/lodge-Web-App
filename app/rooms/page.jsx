@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import RoomCard from '../../components/user/RoomCard';
 import BookingModal from '../../components/user/BookingModal';
+import ReviewsModal from '../../components/user/ReviewsModal';
 
 const PRESET_BRANCHES = [
   'ALL',
@@ -15,6 +16,7 @@ export default function CustomerRoomsPage() {
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]); // Stores active bookings for date overlap checks
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedRoomForReview, setSelectedRoomForReview] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Calculate today's local date in YYYY-MM-DD format
@@ -60,10 +62,10 @@ export default function CustomerRoomsPage() {
     }
     // ------------------------------------
 
-    // 2. Fetch all room inventory
+    // 2. Fetch all room inventory (now including reviews to calculate the average rating)
     const { data: roomsData, error: roomsError } = await supabase
       .from('rooms')
-      .select('*')
+      .select('*, reviews(rating)')
       .order('price_per_night', { ascending: true });
 
     // 3. Fetch active reservations (confirmed or pending) to check date overlaps
@@ -320,6 +322,7 @@ export default function CustomerRoomsPage() {
                 <RoomCard
                   room={room}
                   onSelect={(roomData) => setSelectedRoom(roomData)}
+                  onReviewSelect={(roomData) => setSelectedRoomForReview(roomData)}
                 />
               </div>
             ))}
@@ -334,6 +337,14 @@ export default function CustomerRoomsPage() {
             initialCheckOut={checkOutDate}
             onClose={() => setSelectedRoom(null)}
             onSuccess={fetchRoomsAndBookings}
+          />
+        )}
+
+        {/* Public Reviews Modal Trigger */}
+        {selectedRoomForReview && (
+          <ReviewsModal
+            room={selectedRoomForReview}
+            onClose={() => setSelectedRoomForReview(null)}
           />
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-export default function RoomCard({ room, onSelect }) {
+export default function RoomCard({ room, onSelect, onReviewSelect }) {
   const [isCarouselOpen, setIsCarouselOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -126,12 +126,27 @@ export default function RoomCard({ room, onSelect }) {
           </div>
 
           {/* Price & Action Button Footer */}
-          <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-            <div>
-              <span className="text-2xl font-extrabold text-content">
-                ₹{room.price_per_night}
-              </span>
-              <span className="text-muted text-sm"> / night</span>
+          <div className="mt-auto pt-5 border-t border-border/80 flex justify-between items-center gap-2">
+            <div className="flex flex-col">
+              <div>
+                <span className="text-2xl font-extrabold text-content">₹{room.price_per_night}</span>
+                <span className="text-xs text-muted"> / night</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => onReviewSelect(room)}
+                className="text-[11px] text-primary hover:text-primary-hover font-bold text-left mt-0.5 hover:underline flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>⭐</span> 
+                {room.reviews?.length > 0 ? (
+                  <span>
+                    {(room.reviews.reduce((sum, rev) => sum + rev.rating, 0) / room.reviews.length).toFixed(1)} 
+                    <span className="text-muted/80 ml-1">({room.reviews.length})</span> • Read & Write Reviews
+                  </span>
+                ) : (
+                  <span>New • Read & Write Reviews</span>
+                )}
+              </button>
             </div>
 
             <button
