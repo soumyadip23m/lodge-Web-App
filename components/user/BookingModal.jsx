@@ -69,29 +69,35 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
     }
   };
 
-  // Handle Member inputs with smart typing sanitization and auto-sync
+  // Handle Member inputs with bug-free immutability and auto-sync
   const handleMemberChange = (index, field, value) => {
     const updatedMembers = [...formData.members];
+    // Safely clone the specific member object to prevent React state mutation bugs
+    const currentMember = { ...updatedMembers[index] };
+
     let sanitizedValue = value;
 
-    if (field === 'age') {
-      // Allow only digits up to 3 characters (max age 120)
+    if (field === 'id_type') {
+      currentMember.id_type = value;
+      currentMember.id_number = ''; // Safely reset ID number in the same transaction!
+    } else if (field === 'age') {
       sanitizedValue = value.replace(/\D/g, '').slice(0, 3);
+      currentMember.age = sanitizedValue;
     } else if (field === 'id_number') {
-      const idType = updatedMembers[index].id_type;
+      const idType = currentMember.id_type;
       if (idType === 'Aadhaar Card') {
-        // Restrict Aadhaar to numbers only, max 12 digits
         sanitizedValue = value.replace(/\D/g, '').slice(0, 12);
       } else if (idType === 'PAN Card') {
-        // Auto-convert PAN to uppercase, alphanumeric only, max 10 chars
         sanitizedValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
       } else {
-        // General alphanumeric cleanup for other IDs, uppercase, max 16 chars
         sanitizedValue = value.replace(/[^a-zA-Z0-9-/]/g, '').toUpperCase().slice(0, 16);
       }
+      currentMember.id_number = sanitizedValue;
+    } else {
+      currentMember[field] = sanitizedValue;
     }
 
-    updatedMembers[index][field] = sanitizedValue;
+    updatedMembers[index] = currentMember;
 
     // Automatically sync primary customer name with Member 1
     if (index === 0 && field === 'name') {
@@ -203,6 +209,38 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
 
     setLoading(true);
 
+    // 5. Final Backend Overlap Check: Prevent double-booking for overlapping dates!
+    // Fetch any active bookings for this room to verify availability right before saving
+    const { data: existingBookings, error: checkError } = await supabase
+      .from('bookings')
+      .select('check_in, check_out, status')
+      .eq('room_id', room.id)
+      .in('status', ['confirmed', 'pending']);
+
+    if (checkError) {
+      setLoading(false);
+      alert('⚠️ Unable to verify live room availability. Please try again.');
+      return;
+    }
+
+    // Safely slice to YYYY-MM-DD (first 10 chars) to prevent timestamp/timezone mismatch bugs!
+    const reqIn = formData.check_in.slice(0, 10);
+    const reqOut = formData.check_out.slice(0, 10);
+
+    // Overlap formula: (existing_start < new_end) AND (existing_end > new_start)
+    // Notice: If existing check_out == new check_in, this evaluates to FALSE (No overlap), allowing consecutive-day bookings!
+    const hasOverlap = existingBookings?.some((b) => {
+      const existIn = (b.check_in || '').slice(0, 10);
+      const existOut = (b.check_out || '').slice(0, 10);
+      return existIn < reqOut && existOut > reqIn;
+    });
+
+    if (hasOverlap) {
+      setLoading(false);
+      alert('⚠️ Sorry! This room was just booked for those exact dates by someone else. Please select different dates or try another suite.');
+      return;
+    }
+
     const totalPrice = calculateTotal();
     const payload = {
       room_id: room.id,
@@ -214,8 +252,8 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
     const { error } = await supabase.from('bookings').insert([payload]);
     
     if (!error) {
-      // Mark room as occupied in the catalog upon successful reservation
-      await supabase.from('rooms').update({ is_available: false }).eq('id', room.id);
+      // NOTE: We do NOT set is_available = false permanently on the rooms table anymore!
+      // This ensures other guests can still book this exact same room for future or consecutive dates.
       setLoading(false);
       alert(`🎉 Reservation Confirmed for Room #${room.room_number}!\nTotal Amount: ₹${totalPrice}`);
       onSuccess();
@@ -255,7 +293,7 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
               onChange={(e) => {
                 const val = e.target.value;
                 const updated = [...formData.members];
-                updated[0].name = val;
+                updated[0] = { ...updated[0], name: val }; // Bug-free object cloning
                 setFormData({ ...formData, customer_name: val, members: updated });
               }}
               className="w-full bg-background text-content border border-border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-muted/60 font-medium shadow-sm"
@@ -353,11 +391,7 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
                     <label className="block text-[11px] font-bold text-muted mb-1">ID Document Type <span className="text-red-500">*</span></label>
                     <select
                       value={member.id_type}
-                      onChange={(e) => {
-                        handleMemberChange(index, 'id_type', e.target.value);
-                        // Reset ID number when document type changes to avoid regex mismatches
-                        handleMemberChange(index, 'id_number', '');
-                      }}
+                      onChange={(e) => handleMemberChange(index, 'id_type', e.target.value)}
                       className="w-full bg-background text-content border border-border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary font-medium cursor-pointer shadow-sm"
                     >
                       <option value="Aadhaar Card" className="bg-surface text-content">Aadhaar Card (12 Digits)</option>
@@ -463,10 +497,10 @@ export default function BookingModal({ room, initialCheckIn = '', initialCheckOu
               formData.check_in < today ||
               formData.members.some((m) => !m.id_image_url || !m.name.trim() || !m.id_number.trim() || !String(m.age).trim() || Number(m.age) <= 0)
             }
-            className="w-full mt-4 bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex justify-center items-center space-x-2"
+            className="w-full mt-4 bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex justify-center items-center space-x-2"
           >
             <span>{loading ? '⏳' : uploadingIndex !== null ? '⬆️' : '⚡'}</span>
-            <span>{loading ? 'Confirming Reservation...' : uploadingIndex !== null ? 'Uploading Member ID...' : `Confirm Reservation (${formData.members.length} ${formData.members.length === 1 ? 'Guest' : 'Guests'})`}</span>
+            <span>{loading ? 'Confirming Reservation...' : uploadingIndex !== null ? 'Uploading Member ID Photo...' : `Confirm Reservation (${formData.members.length} ${formData.members.length === 1 ? 'Guest' : 'Guests'})`}</span>
           </button>
         </form>
       </div>

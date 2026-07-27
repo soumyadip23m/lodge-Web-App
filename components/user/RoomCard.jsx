@@ -60,9 +60,29 @@ export default function RoomCard({ room, onSelect }) {
             className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500 opacity-95 group-hover/card:opacity-100"
           />
 
-          {/* Room Type Badge */}
-          <div className="absolute top-3 right-3 bg-surface/90 text-content backdrop-blur-sm border border-border px-3 py-1 rounded-full text-xs font-bold shadow">
-            {room.type} Room
+          {/* Room Type Badge & Dynamic Availability Badge */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 items-end z-10">
+            <div className="bg-surface/90 text-content backdrop-blur-sm border border-border px-3 py-1 rounded-full text-xs font-bold shadow">
+              {room.type} Room
+            </div>
+            
+            {/* Show Booked/Available only if admin didn't mark it offline and a date search was performed */}
+            {room.isDateSearchActive && room.is_available && (
+              <div className={`backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold shadow border text-white ${
+                room.isDynamicallyAvailable 
+                  ? 'bg-emerald-500/90 border-emerald-600' 
+                  : 'bg-red-500/90 border-red-600'
+              }`}>
+                {room.isDynamicallyAvailable ? '✓ Available' : '🔒 Booked'}
+              </div>
+            )}
+            
+            {/* Optional: Show if Admin manually took the room offline */}
+            {room.is_available === false && (
+              <div className="bg-slate-700/90 text-white backdrop-blur-sm border border-slate-600 px-3 py-1 rounded-full text-xs font-bold shadow">
+                Maintenance
+              </div>
+            )}
           </div>
 
           {/* Photo Count / Click to Expand Overlay */}
@@ -115,14 +135,17 @@ export default function RoomCard({ room, onSelect }) {
             </div>
 
             <button
+              type="button"
               onClick={() => onSelect(room)}
-              disabled={!room.is_available}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all duration-300 ${room.is_available
-                  ? 'bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white shadow-primary/20 hover:shadow-primary/40 hover:scale-105 active:scale-95'
-                  : 'bg-surface-hover text-muted border border-border/50 cursor-not-allowed opacity-60'
-                }`}
+              disabled={room.isDynamicallyAvailable === false}
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                room.isDynamicallyAvailable === false
+                  ? 'bg-surface-hover/80 text-muted cursor-not-allowed border border-border'
+                  : 'bg-linear-to-r from-primary via-indigo-600 to-accent hover:from-primary-hover hover:to-cyan-400 text-white shadow-primary/20 hover:shadow-primary/40 hover:scale-105 active:scale-95 cursor-pointer'
+              }`}
             >
-              {room.is_available ? '⚡ Book Room' : 'Currently Booked'}
+              <span>📅</span>
+              <span>{room.isDynamicallyAvailable === false ? 'Unavailable' : 'Check Dates & Book'}</span>
             </button>
           </div>
         </div>

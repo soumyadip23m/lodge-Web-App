@@ -57,22 +57,48 @@ export default function CustomerRoomsPage() {
     
     return !bookings.some((b) => {
       if (b.room_id !== roomId) return false;
+      // Safely slice to YYYY-MM-DD (first 10 chars) to prevent timestamp/timezone mismatch bugs!
+      const existIn = (b.check_in || '').slice(0, 10);
+      const existOut = (b.check_out || '').slice(0, 10);
+      const reqIn = start.slice(0, 10);
+      const reqOut = end.slice(0, 10);
+
       // Overlap formula: (existing_start < new_end) AND (existing_end > new_start)
-      // Notice: If existing_end (b.check_out) === new_start (start), b.check_out > start is FALSE!
-      // This allows a new guest to check in on the very same day the previous guest checks out.
-      return b.check_in < end && b.check_out > start;
+      // If existOut === reqIn (e.g., "2026-05-15" > "2026-05-15"), this is FALSE! Same-day check-in allowed!
+      return existIn < reqOut && existOut > reqIn;
     });
   };
 
-  // Dynamically filter rooms based on customer requirements & date availability
-  const filteredRooms = rooms.filter((room) => {
+  // Dynamically attach availability status to each room, then filter
+  const processedRooms = rooms.map((room) => {
+    const isDateSearchActive = Boolean(checkInDate && checkOutDate);
+    
+    // Check overlapping dates if dates are entered. 
+    // If no dates are entered, default to true so users can still open the calendar for future dates.
+    const isAvailableForSelectedDates = isDateSearchActive
+      ? isRoomAvailableForDates(room.id, checkInDate, checkOutDate)
+      : true;
+
+    // Final availability considers admin's manual toggle AND date overlaps
+    const isDynamicallyAvailable = room.is_available && isAvailableForSelectedDates;
+
+    return { 
+      ...room, 
+      isDynamicallyAvailable, 
+      isDateSearchActive 
+    };
+  });
+
+  // Filter based on Customer Requirements & the "Show Available Only" toggle
+  const filteredRooms = processedRooms.filter((room) => {
     const matchBranch = selectedBranch === 'ALL' || (room.branch || 'New Bay View (at New Digha)') === selectedBranch;
     const matchType = selectedType === 'ALL' || room.type === selectedType;
     const matchPrice = !maxPrice || room.price_per_night <= parseFloat(maxPrice);
-    const matchGeneralAvailability = !onlyAvailable || room.is_available === true;
-    const matchDateAvailability = isRoomAvailableForDates(room.id, checkInDate, checkOutDate);
+    
+    // If "Show Available Rooms Only" is checked, hide booked/unavailable rooms
+    const matchAvailability = !onlyAvailable || room.isDynamicallyAvailable;
 
-    return matchBranch && matchType && matchPrice && matchGeneralAvailability && matchDateAvailability;
+    return matchBranch && matchType && matchPrice && matchAvailability;
   });
 
   return (
