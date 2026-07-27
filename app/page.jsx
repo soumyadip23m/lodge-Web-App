@@ -22,16 +22,10 @@ export default function HomePage() {
                     Experience unmatched comfort by the bay. Browse our premium air-conditioned suites, view interactive photo galleries, and reserve your stay in seconds.
                 </p>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-5">
-                    <Link
-                        href="/rooms"
-                        className="px-8 py-4 bg-linear-to-r from-primary to-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 animate-pulse-glow"
-                    >
-                        Explore Available Rooms
-                    </Link>
+                <div className="flex justify-center">
                     <Link
                         href="/login"
-                        className="px-8 py-4 bg-surface hover:bg-surface-hover text-content border border-border rounded-xl font-bold text-lg shadow-sm hover:border-primary/50 hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-md"
+                        className="px-8 py-4 bg-linear-to-r from-primary to-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-300 animate-pulse-glow"
                     >
                         Login / Admin Portal
                     </Link>
