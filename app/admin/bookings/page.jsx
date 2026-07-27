@@ -27,7 +27,35 @@ export default function BookingHistoryPage() {
         return;
       }
 
-      // Authorized -> Fetch bookings along with room details
+      // --- AUTOMATIC CHECKOUT SWEEP ---
+      const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      
+      const { data: expiredBookings } = await supabase
+        .from('bookings')
+        .select('id, room_id')
+        .in('status', ['confirmed', 'pending'])
+        .lt('check_out', today);
+
+      if (expiredBookings && expiredBookings.length > 0) {
+        const expiredBookingIds = expiredBookings.map(b => b.id);
+        const expiredRoomIds = expiredBookings.map(b => b.room_id);
+
+        await supabase
+          .from('bookings')
+          .update({ 
+            status: 'checked_out', 
+            actual_checkout_time: new Date().toISOString() 
+          })
+          .in('id', expiredBookingIds);
+
+        await supabase
+          .from('rooms')
+          .update({ is_available: true })
+          .in('id', expiredRoomIds);
+      }
+      // --------------------------------
+
+      // Authorized -> Fetch updated bookings along with room details
       const { data, error } = await supabase
         .from('bookings')
         .select('*, rooms(name, room_number, type)')

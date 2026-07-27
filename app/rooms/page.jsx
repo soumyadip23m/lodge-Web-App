@@ -30,13 +30,43 @@ export default function CustomerRoomsPage() {
 
   const fetchRoomsAndBookings = async () => {
     setLoading(true);
-    // 1. Fetch all room inventory
+    
+    // --- 1. AUTOMATIC CHECKOUT SYSTEM ---
+    // Find bookings where the checkout date has passed and they are still active
+    const { data: expiredBookings } = await supabase
+      .from('bookings')
+      .select('id, room_id')
+      .in('status', ['confirmed', 'pending'])
+      .lt('check_out', today); // 'today' is already calculated at the top of your component
+
+    if (expiredBookings && expiredBookings.length > 0) {
+      const expiredBookingIds = expiredBookings.map(b => b.id);
+      const expiredRoomIds = expiredBookings.map(b => b.room_id);
+
+      // Update those bookings in the database to 'checked_out'
+      await supabase
+        .from('bookings')
+        .update({ 
+          status: 'checked_out', 
+          actual_checkout_time: new Date().toISOString() 
+        })
+        .in('id', expiredBookingIds);
+
+      // Release the rooms back to live inventory in the database
+      await supabase
+        .from('rooms')
+        .update({ is_available: true })
+        .in('id', expiredRoomIds);
+    }
+    // ------------------------------------
+
+    // 2. Fetch all room inventory
     const { data: roomsData, error: roomsError } = await supabase
       .from('rooms')
       .select('*')
       .order('price_per_night', { ascending: true });
 
-    // 2. Fetch active reservations (confirmed or pending) to check date overlaps
+    // 3. Fetch active reservations (confirmed or pending) to check date overlaps
     const { data: bookingsData, error: bookingsError } = await supabase
       .from('bookings')
       .select('room_id, check_in, check_out, status')
