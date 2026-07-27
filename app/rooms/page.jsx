@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import RoomCard from '../../components/user/RoomCard';
 import BookingModal from '../../components/user/BookingModal';
@@ -13,6 +14,7 @@ const PRESET_BRANCHES = [
 ];
 
 export default function CustomerRoomsPage() {
+  const router = useRouter();
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]); // Stores active bookings for date overlap checks
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -80,8 +82,24 @@ export default function CustomerRoomsPage() {
   };
 
   useEffect(() => {
-    fetchRoomsAndBookings();
-  }, []);
+    const verifyAuthAndFetch = async () => {
+      setLoading(true);
+      
+      // 1. Check if user is signed in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        alert('🔒 Please sign in first to view and book rooms.');
+        router.push('/login');
+        return;
+      }
+
+      // 2. User is authenticated -> load catalog and bookings
+      fetchRoomsAndBookings();
+    };
+
+    verifyAuthAndFetch();
+  }, [router]);
 
   // Smart hotel availability checker: allows check-in on the exact same day someone checks out!
   const isRoomAvailableForDates = (roomId, start, end) => {
